@@ -1,0 +1,22 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  # Этот workflow можно использовать для деплоя на Railway, Render и т.д.
+  # Настройте под ваш хостинг
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify deployment
+        run: |
+          echo "Backend changes detected. Please deploy manually or configure your hosting service."
+          echo "Recommended services: Railway, Render, Heroku, DigitalOcean"
+
