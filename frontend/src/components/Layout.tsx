@@ -1,7 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { authApi } from '../services/api'
-import type { User } from '../types'
 import BottomMenu from './BottomMenu'
 import './Layout.css'
 
@@ -10,16 +9,13 @@ interface LayoutProps {
 }
 
 function Layout({ children }: LayoutProps) {
-  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const location = useLocation()
-  const navigate = useNavigate()
 
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const userData = await authApi.getMe()
-        setUser(userData)
+        await authApi.getMe()
       } catch (error) {
         console.error('Failed to load user:', error)
       } finally {

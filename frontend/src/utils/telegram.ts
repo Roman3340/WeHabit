@@ -16,6 +16,8 @@ declare global {
         ready: () => void
         expand: () => void
         close: () => void
+        setHeaderColor?: (color: string) => void
+        setBackgroundColor?: (color: string) => void
       }
     }
   }
@@ -27,9 +29,13 @@ export const initTelegramWebApp = () => {
     tg.ready()
     tg.expand()
     
-    // Настройка цветовой схемы
-    tg.setHeaderColor('#f5f7fa')
-    tg.setBackgroundColor('#f5f7fa')
+    // Настройка цветовой схемы (если методы доступны)
+    if (tg.setHeaderColor) {
+      tg.setHeaderColor('#f5f7fa')
+    }
+    if (tg.setBackgroundColor) {
+      tg.setBackgroundColor('#f5f7fa')
+    }
     
     return tg
   }

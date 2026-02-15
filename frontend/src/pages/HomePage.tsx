@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { habitsApi, statsApi } from '../services/api'
-import type { Habit, HabitStats } from '../types'
+import { habitsApi } from '../services/api'
+import type { Habit } from '../types'
 import HabitCard from '../components/HabitCard'
 import './HomePage.css'
 
