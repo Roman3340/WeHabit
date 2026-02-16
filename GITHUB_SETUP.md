@@ -16,20 +16,27 @@ git push -u origin main
 
 ## Шаг 2: Настройка GitHub Pages
 
+**ВАЖНО**: Сначала включите GitHub Pages в настройках репозитория, иначе workflow будет падать с ошибкой.
+
 1. Перейдите в **Settings** вашего репозитория на GitHub
 2. В левом меню выберите **Pages**
 3. В разделе **Source** выберите **GitHub Actions**
 4. Сохраните изменения
+5. Подождите несколько минут, чтобы GitHub активировал Pages
 
-## Шаг 3: Настройка переменных окружения (опционально)
+**Альтернатива**: Если не хотите использовать GitHub Pages сразу, используйте workflow `build-frontend.yml`, который только собирает проект без деплоя.
 
-Если ваш API будет на другом домене:
+## Шаг 3: Настройка переменных окружения
+
+**Обязательно**, если ваш API на другом сервере (например, на Timeweb):
 
 1. Перейдите в **Settings** → **Secrets and variables** → **Actions**
 2. Нажмите **New repository secret**
 3. Добавьте:
    - **Name**: `VITE_API_URL`
-   - **Value**: URL вашего API (например: `https://your-api.railway.app/api`)
+   - **Value**: URL вашего API (например: `https://api.your-domain.com/api` или `http://your-server-ip:8000/api`)
+
+**Важно**: После деплоя бэкенда на Timeweb, обновите этот секрет с правильным URL вашего API.
 
 ## Шаг 4: Обновление vite.config.ts
 
