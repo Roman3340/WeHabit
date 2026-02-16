@@ -5,17 +5,23 @@
 }
 
 :root {
-  --bg-primary: #020617;
-  --bg-secondary: rgba(15, 23, 42, 0.85);
-  --bg-card: rgba(15, 23, 42, 0.9);
-  --bg-glow-purple: rgba(129, 140, 248, 0.45);
-  --bg-glow-cyan: rgba(34, 211, 238, 0.35);
-  --text-primary: #e2e8f0;
-  --text-secondary: #64748b;
-  --accent: #6366f1;
-  --accent-hover: #818cf8;
+  /* Основа — глубокий тёмный фон */
+  --bg-primary: #050816;
+  --bg-secondary: rgba(15, 23, 42, 0.9);
+  --bg-card: rgba(9, 9, 20, 0.96);
+
+  /* Неоновые, но спокойные акценты */
+  --bg-glow-purple: rgba(168, 85, 247, 0.55);
+  --bg-glow-cyan: rgba(34, 211, 238, 0.4);
+  --bg-glow-pink: rgba(244, 114, 182, 0.38);
+
+  --text-primary: #e5e7eb;
+  --text-secondary: #6b7280;
+
+  --accent: #8b5cf6;
+  --accent-hover: #a855f7;
   --success: #22c55e;
-  --danger: #f97373;
+  --danger: #f97316;
   --border-radius: 20px;
   --shadow: 0 18px 45px rgba(15, 23, 42, 0.75);
   --shadow-hover: 0 24px 60px rgba(15, 23, 42, 0.9);
@@ -28,9 +34,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background:
-    radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.08), transparent 55%),
-    radial-gradient(circle at 90% 0%, rgba(129, 140, 248, 0.13), transparent 55%),
-    radial-gradient(circle at 0% 100%, rgba(45, 212, 191, 0.08), transparent 55%),
+    radial-gradient(circle at 0% 0%, rgba(34, 211, 238, 0.18), transparent 55%),
+    radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.24), transparent 55%),
+    radial-gradient(circle at 0% 100%, rgba(45, 212, 191, 0.18), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(244, 114, 182, 0.16), transparent 55%),
     #020617;
   color: var(--text-primary);
   min-height: 100vh;
@@ -47,13 +54,13 @@ body {
   position: relative;
   background: linear-gradient(
     135deg,
-    rgba(15, 23, 42, 0.92),
-    rgba(15, 23, 42, 0.78)
+    rgba(15, 23, 42, 0.96),
+    rgba(15, 23, 42, 0.85)
   );
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
   border-radius: var(--border-radius);
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.4);
   box-shadow: var(--shadow);
   overflow: hidden;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
@@ -65,8 +72,9 @@ body {
   inset: -40%;
   background:
     radial-gradient(circle at 0% 0%, var(--bg-glow-purple), transparent 60%),
-    radial-gradient(circle at 100% 100%, var(--bg-glow-cyan), transparent 60%);
-  opacity: 0.28;
+    radial-gradient(circle at 100% 0%, var(--bg-glow-cyan), transparent 60%),
+    radial-gradient(circle at 0% 100%, var(--bg-glow-pink), transparent 65%);
+  opacity: 0.32;
   pointer-events: none;
   z-index: -1;
 }
@@ -74,7 +82,7 @@ body {
 .glass-card:hover {
   box-shadow: var(--shadow-hover);
   transform: translateY(-3px);
-  border-color: rgba(129, 140, 248, 0.9);
+  border-color: rgba(139, 92, 246, 0.9);
 }
 
 /* Кнопки */
@@ -105,8 +113,8 @@ body {
 .btn-secondary {
   background: linear-gradient(
     135deg,
-    rgba(30, 64, 175, 0.4),
-    rgba(15, 23, 42, 0.9)
+    rgba(30, 64, 175, 0.55),
+    rgba(15, 23, 42, 0.98)
   );
   color: var(--text-primary);
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.75);
