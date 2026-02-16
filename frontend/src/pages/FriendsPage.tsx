@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { friendsApi } from '../services/api'
 import type { Friendship } from '../types'
-import './FriendsPage.css' 
+import './FriendsPage.css'
 
 function FriendsPage() {
   const [friends, setFriends] = useState<Friendship[]>([])
