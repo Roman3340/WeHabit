@@ -1,18 +1,26 @@
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FriendsIcon, HabitsIcon, HomeIcon, ProfileIcon } from './Icons'
 import './BottomMenu.css'
 
 interface BottomMenuProps {
   currentPath: string
 }
 
+interface MenuItem {
+  path: string
+  label: string
+  icon: ReactNode
+}
+
 function BottomMenu({ currentPath }: BottomMenuProps) {
   const navigate = useNavigate()
 
-  const menuItems = [
-    { path: '/', icon: '🏠', label: 'Главная' },
-    { path: '/habits', icon: '✅', label: 'Привычки' },
-    { path: '/friends', icon: '👥', label: 'Друзья' },
-    { path: '/profile', icon: '👤', label: 'Профиль' },
+  const menuItems: MenuItem[] = [
+    { path: '/', icon: <HomeIcon />, label: 'Главная' },
+    { path: '/habits', icon: <HabitsIcon />, label: 'Привычки' },
+    { path: '/friends', icon: <FriendsIcon />, label: 'Друзья' },
+    { path: '/profile', icon: <ProfileIcon />, label: 'Профиль' },
   ]
 
   return (

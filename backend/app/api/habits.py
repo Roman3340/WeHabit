@@ -105,7 +105,7 @@ async def get_habit(
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if not habit:
         raise HTTPException(status_code=404, detail="Habit not found")
-    
+
     # Проверка доступа
     if habit.created_by != current_user.id:
         participant = db.query(HabitParticipant).filter(
@@ -114,8 +114,31 @@ async def get_habit(
         ).first()
         if not participant:
             raise HTTPException(status_code=403, detail="Access denied")
-    
-    return habit
+
+    # Формируем ответ с участниками в том же формате, что и в списке привычек
+    participants = db.query(HabitParticipant).filter(
+        HabitParticipant.habit_id == habit.id
+    ).all()
+
+    habit_dict = {
+        "id": habit.id,
+        "name": habit.name,
+        "description": habit.description,
+        "frequency": habit.frequency,
+        "is_shared": habit.is_shared,
+        "created_by": habit.created_by,
+        "created_at": habit.created_at,
+        "updated_at": habit.updated_at,
+        "participants": [
+            {
+                "id": p.user_id,
+                "joined_at": p.joined_at,
+            }
+            for p in participants
+        ],
+    }
+
+    return habit_dict
 
 
 @router.put("/{habit_id}", response_model=HabitSchema)

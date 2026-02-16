@@ -2,6 +2,7 @@
   padding: 20px;
   margin-bottom: 16px;
   cursor: pointer;
+  border-radius: var(--border-radius);
 }
 
 .habit-header {
@@ -19,7 +20,15 @@
 }
 
 .shared-badge {
-  font-size: 20px;
+  font-size: 18px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.25),
+    rgba(129, 140, 248, 0.4)
+  );
+  color: #e5e7eb;
 }
 
 .habit-description {
