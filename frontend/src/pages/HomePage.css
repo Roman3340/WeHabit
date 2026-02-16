@@ -1,49 +1,115 @@
-.page-container {
+.home-screen {
   max-width: 600px;
   margin: 0 auto;
   width: 100%;
+  padding-bottom: 12px;
 }
 
-.page-header {
+.home-header {
+  padding-top: 4px;
+  padding-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.home-date-weekday {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.home-date-full {
+  font-size: 13px;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.home-hero {
+  text-align: left;
+  padding: 8px 0 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.home-title {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #f9fafb;
+}
+
+.home-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 320px;
+}
+
+.home-add-button {
+  margin-top: 10px;
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 20% 0%, #a855f7, #6366f1);
+  box-shadow: 0 18px 40px rgba(79, 70, 229, 0.7);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.home-add-button-inner {
+  font-size: 40px;
+  line-height: 1;
+  color: #f9fafb;
+}
+
+.home-add-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 50px rgba(79, 70, 229, 0.8);
+}
+
+.home-add-button:active {
+  transform: translateY(0);
+  box-shadow: 0 14px 30px rgba(79, 70, 229, 0.65);
+}
+
+.home-section {
+  margin-top: 10px;
+}
+
+.home-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
-.page-header h1 {
-  font-size: 28px;
-  font-weight: 700;
+.home-section-title {
+  font-size: 18px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
+.home-section-link {
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: #a5b4fc;
+  cursor: pointer;
 }
 
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.empty-state h2 {
-  font-size: 24px;
-  margin-bottom: 8px;
-  color: var(--text-primary);
-}
-
-.empty-state p {
-  color: var(--text-secondary);
-  margin-bottom: 24px;
-}
-
-.habits-list {
+.home-habits-list {
   display: flex;
   flex-direction: column;
 }
 
-.loading {
+.home-loading {
   text-align: center;
   padding: 40px;
   color: var(--text-secondary);

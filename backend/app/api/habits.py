@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 from uuid import UUID
 from datetime import date
@@ -209,7 +210,7 @@ async def complete_habit(
     existing_log = db.query(HabitLog).filter(
         HabitLog.habit_id == habit_id,
         HabitLog.user_id == current_user.id,
-        db.func.date(HabitLog.completed_at) == today
+        func.date(HabitLog.completed_at) == today
     ).first()
     
     if existing_log:

@@ -1,5 +1,5 @@
 .habit-form {
-  padding: 24px;
+  padding: 22px 20px 20px;
 }
 
 .form-group {
@@ -11,7 +11,7 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .checkbox-label {
@@ -26,5 +26,22 @@
   width: 20px;
   height: 20px;
   cursor: pointer;
+}
+
+.habit-form-section-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(148, 163, 184, 0.9);
+  margin-bottom: 10px;
+}
+
+.habit-form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.habit-form-row .input {
+  flex: 1;
 }
 

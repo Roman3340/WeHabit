@@ -37,51 +37,63 @@ function HabitForm({ onSubmit, initialData }: HabitFormProps) {
   return (
     <form className="habit-form glass-card" onSubmit={handleSubmit}>
       <div className="form-group">
-        <label htmlFor="name">Название привычки *</label>
+        <div className="habit-form-section-title">Название</div>
         <input
           id="name"
           type="text"
           className="input"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Например: Пить воду"
+          placeholder="Например: Утренняя прогулка"
           required
         />
       </div>
 
       <div className="form-group">
-        <label htmlFor="description">Описание</label>
+        <div className="habit-form-section-title">Описание</div>
         <textarea
           id="description"
           className="input textarea"
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Добавьте описание привычки..."
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
+          placeholder="Добавьте детали, чтобы не забывать, зачем вы это делаете."
           rows={3}
         />
       </div>
 
       <div className="form-group">
-        <label htmlFor="frequency">Частота</label>
-        <select
-          id="frequency"
-          className="input"
-          value={formData.frequency}
-          onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-        >
-          <option value="daily">Ежедневно</option>
-          <option value="weekly">Еженедельно</option>
-        </select>
+        <div className="habit-form-section-title">Повторение</div>
+        <div className="habit-form-row">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setFormData({ ...formData, frequency: 'daily' })}
+          >
+            Каждый день
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setFormData({ ...formData, frequency: 'weekly' })}
+          >
+            Раз в неделю
+          </button>
+        </div>
       </div>
 
       <div className="form-group">
+        <div className="habit-form-section-title">Тип привычки</div>
         <label className="checkbox-label">
           <input
             type="checkbox"
             checked={formData.is_shared}
-            onChange={(e) => setFormData({ ...formData, is_shared: e.target.checked })}
+            onChange={(e) =>
+              setFormData({ ...formData, is_shared: e.target.checked })
+            }
           />
-          <span>Совместная привычка (с друзьями)</span>
+          <span>Совместная привычка (отслеживать с друзьями)</span>
         </label>
       </div>
 
