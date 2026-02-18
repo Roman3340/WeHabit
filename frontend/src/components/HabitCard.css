@@ -23,12 +23,8 @@
   font-size: 18px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.25),
-    rgba(129, 140, 248, 0.4)
-  );
-  color: #e5e7eb;
+  background: rgba(212, 175, 55, 0.25);
+  color: var(--text-primary);
 }
 
 .habit-description {

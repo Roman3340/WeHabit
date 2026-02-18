@@ -49,15 +49,17 @@ async def get_habits(
             "created_by": habit.created_by,
             "created_at": habit.created_at,
             "updated_at": habit.updated_at,
+            "color": getattr(habit, "color", None),
+            "days_of_week": getattr(habit, "days_of_week", None),
+            "weekly_goal_days": getattr(habit, "weekly_goal_days", None),
+            "reminder_enabled": getattr(habit, "reminder_enabled", None),
+            "reminder_time": getattr(habit, "reminder_time", None),
             "participants": [
-                {
-                    "id": p.user_id,
-                    "joined_at": p.joined_at
-                } for p in participants
-            ]
+                {"id": p.user_id, "joined_at": p.joined_at} for p in participants
+            ],
         }
         result.append(habit_dict)
-    
+
     return result
 
 
@@ -73,7 +75,12 @@ async def create_habit(
         description=habit_data.description,
         frequency=habit_data.frequency,
         is_shared=habit_data.is_shared,
-        created_by=current_user.id
+        created_by=current_user.id,
+        color=getattr(habit_data, "color", None) or "gold",
+        days_of_week=getattr(habit_data, "days_of_week", None),
+        weekly_goal_days=getattr(habit_data, "weekly_goal_days", None),
+        reminder_enabled=getattr(habit_data, "reminder_enabled", False) or False,
+        reminder_time=getattr(habit_data, "reminder_time", None),
     )
     db.add(habit)
     db.commit()
@@ -130,15 +137,15 @@ async def get_habit(
         "created_by": habit.created_by,
         "created_at": habit.created_at,
         "updated_at": habit.updated_at,
+        "color": getattr(habit, "color", None),
+        "days_of_week": getattr(habit, "days_of_week", None),
+        "weekly_goal_days": getattr(habit, "weekly_goal_days", None),
+        "reminder_enabled": getattr(habit, "reminder_enabled", None),
+        "reminder_time": getattr(habit, "reminder_time", None),
         "participants": [
-            {
-                "id": p.user_id,
-                "joined_at": p.joined_at,
-            }
-            for p in participants
+            {"id": p.user_id, "joined_at": p.joined_at} for p in participants
         ],
     }
-
     return habit_dict
 
 
@@ -157,12 +164,30 @@ async def update_habit(
     if habit.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Only creator can update habit")
     
-    for field, value in habit_data.dict(exclude_unset=True).items():
+    update_data = habit_data.dict(exclude_unset=True)
+    for field, value in update_data.items():
         setattr(habit, field, value)
-    
+
     db.commit()
     db.refresh(habit)
-    return habit
+    # Возвращаем в том же формате, что и get_habit
+    participants = db.query(HabitParticipant).filter(HabitParticipant.habit_id == habit.id).all()
+    return {
+        "id": habit.id,
+        "name": habit.name,
+        "description": habit.description,
+        "frequency": habit.frequency,
+        "is_shared": habit.is_shared,
+        "created_by": habit.created_by,
+        "created_at": habit.created_at,
+        "updated_at": habit.updated_at,
+        "color": getattr(habit, "color", None),
+        "days_of_week": getattr(habit, "days_of_week", None),
+        "weekly_goal_days": getattr(habit, "weekly_goal_days", None),
+        "reminder_enabled": getattr(habit, "reminder_enabled", None),
+        "reminder_time": getattr(habit, "reminder_time", None),
+        "participants": [{"id": p.user_id, "joined_at": p.joined_at} for p in participants],
+    }
 
 
 @router.delete("/{habit_id}")

@@ -1,0 +1,32 @@
+.achievements-page {
+  padding-bottom: calc(var(--bottom-menu-height) + var(--space-lg));
+}
+
+.page-header-row {
+  margin-bottom: var(--space-lg);
+}
+
+.page-header-row .back-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  padding: 0;
+}
+
+.page-header-row h1 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.achievements-content {
+  padding: var(--space-lg);
+}
+
+.achievements-placeholder {
+  color: var(--text-muted);
+  margin: 0;
+}

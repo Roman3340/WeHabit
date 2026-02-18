@@ -1,0 +1,80 @@
+.profile-edit-page {
+  padding-bottom: calc(var(--bottom-menu-height) + var(--space-lg));
+}
+
+.profile-edit-header {
+  margin-bottom: var(--space-lg);
+}
+
+.profile-edit-header .back-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  padding: 0;
+}
+
+.profile-edit-header h1 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.profile-edit-card {
+  padding: var(--space-lg);
+}
+
+.profile-avatar-section {
+  margin-bottom: var(--space-md);
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+
+.emoji-option {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.emoji-option.selected {
+  border-color: var(--accent);
+  background: rgba(212, 175, 55, 0.15);
+}
+
+.profile-form .form-group {
+  margin-bottom: var(--space-md);
+}
+
+.profile-form .form-group label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.form-actions .btn {
+  flex: 1;
+}
+
+.page-container .loading,
+.page-container .error {
+  text-align: center;
+  color: var(--text-muted);
+  padding: var(--space-lg);
+}

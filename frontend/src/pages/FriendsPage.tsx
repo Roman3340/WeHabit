@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { friendsApi } from '../services/api'
 import type { Friendship } from '../types'
 import './FriendsPage.css'
 
 function FriendsPage() {
+  const navigate = useNavigate()
   const [friends, setFriends] = useState<Friendship[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -21,56 +23,38 @@ function FriendsPage() {
     loadFriends()
   }, [])
 
+  const inviteLink = typeof window !== 'undefined' ? window.location.origin + (import.meta.env.BASE_URL || '') : ''
   const handleInviteClick = () => {
-    if ((window as any).Telegram?.WebApp?.openTelegramLink) {
-      // Здесь пользователь сможет заменить ссылку на реальную ссылку мини‑приложения
-      ;(window as any).Telegram.WebApp.openTelegramLink(
-        'https://t.me/your_bot_username'
-      )
-    } else if (navigator.share) {
-      navigator
-        .share({
-          title: 'Habit Tracker',
-          text: 'Строим привычки вместе 💪',
-          url: window.location.href,
-        })
-        .catch(() => {})
+    if (navigator.clipboard?.writeText(inviteLink)) {
+      navigator.clipboard.writeText(inviteLink)
+      alert('Ссылка скопирована — отправьте её другу.')
     } else {
-      alert('Отправьте другу ссылку на это мини‑приложение в Telegram.')
+      alert('Отправьте другу ссылку: ' + inviteLink)
     }
   }
 
   if (loading) {
     return (
-      <div className="feed-container">
+      <div className="page-container">
         <div className="feed-loading">Загрузка...</div>
       </div>
     )
   }
 
-  const hasFriends = friends.length > 0
-
   return (
-    <div className="feed-container">
-      <header className="feed-header">
-        <div className="feed-date-label">Лента</div>
-        <h1 className="feed-title">Пригласите своих друзей</h1>
-        <p className="feed-subtitle">
-          Следите за их прогрессом и поддерживайте друг друга каждый день.
-        </p>
-      </header>
-
+    <div className="page-container friends-page">
+      <div className="page-header-row">
+        <button type="button" className="back-btn" onClick={() => navigate('/profile')}>
+          ← Назад
+        </button>
+        <h1>Друзья</h1>
+      </div>
       <section className="glass-card feed-invite-card">
-        <div className="feed-avatars">
-          <div className="feed-avatar-circle feed-avatar-main" />
-          <div className="feed-avatar-circle feed-avatar-secondary" />
-        </div>
         <button className="btn feed-invite-button" onClick={handleInviteClick}>
           Пригласить друга
         </button>
       </section>
-
-      {hasFriends && (
+      {friends.length > 0 && (
         <section className="feed-friends-section">
           <h2 className="feed-section-title">Мои друзья</h2>
           <div className="feed-friends-list">
@@ -86,9 +70,7 @@ function FriendsPage() {
                       'Без имени'}
                   </h3>
                   {friendship.friend?.username && (
-                    <p className="friend-username">
-                      @{friendship.friend.username}
-                    </p>
+                    <p className="friend-username">@{friendship.friend.username}</p>
                   )}
                 </div>
               </div>

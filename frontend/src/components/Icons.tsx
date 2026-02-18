@@ -17,8 +17,8 @@ export function HomeIcon(props: IconProps) {
     <svg {...baseProps} {...props}>
       <defs>
         <linearGradient id="homeGradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#a855f7" />
-          <stop offset="100%" stopColor="#22d3ee" />
+          <stop offset="0%" stopColor="#d4af37" />
+          <stop offset="100%" stopColor="#b8860b" />
         </linearGradient>
       </defs>
       <path
@@ -57,6 +57,22 @@ export function HabitsIcon(props: IconProps) {
         d="M8 11.5 10.2 14 16 8.5"
         stroke="url(#habitGradient)"
       />
+    </svg>
+  )
+}
+
+export function FeedIcon(props: IconProps) {
+  return (
+    <svg {...baseProps} {...props}>
+      <defs>
+        <linearGradient id="feedGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#d4af37" />
+          <stop offset="100%" stopColor="#b8860b" />
+        </linearGradient>
+      </defs>
+      <path d="M4 6h16" stroke="url(#feedGradient)" strokeLinecap="round" />
+      <path d="M4 12h16" stroke="url(#feedGradient)" strokeLinecap="round" />
+      <path d="M4 18h10" stroke="url(#feedGradient)" strokeLinecap="round" />
     </svg>
   )
 }

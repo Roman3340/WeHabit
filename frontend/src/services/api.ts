@@ -53,6 +53,11 @@ export const habitsApi = {
     frequency?: string
     is_shared?: boolean
     participant_ids?: string[]
+    color?: string
+    days_of_week?: number[]
+    weekly_goal_days?: number
+    reminder_enabled?: boolean
+    reminder_time?: string
   }): Promise<Habit> => {
     const response = await api.post('/habits', data)
     return response.data
@@ -63,6 +68,11 @@ export const habitsApi = {
     description?: string
     frequency?: string
     is_shared?: boolean
+    color?: string
+    days_of_week?: number[]
+    weekly_goal_days?: number
+    reminder_enabled?: boolean
+    reminder_time?: string
   }): Promise<Habit> => {
     const response = await api.put(`/habits/${id}`, data)
     return response.data

@@ -17,6 +17,12 @@ class Habit(Base):
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    # Новые поля: цвет, дни недели или недельная цель, напоминание
+    color = Column(String(20), default="gold")
+    days_of_week = Column(ARRAY(Integer))  # 1=Пн .. 7=Вс, NULL если используется weekly_goal_days
+    weekly_goal_days = Column(Integer)  # N из 7, NULL если используются days_of_week
+    reminder_enabled = Column(Boolean, default=False)
+    reminder_time = Column(String(5))  # HH:MM
 
     # Relationships
     participants = relationship("HabitParticipant", back_populates="habit", cascade="all, delete-orphan")

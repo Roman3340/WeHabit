@@ -10,6 +10,8 @@ export interface User {
   updated_at: string
 }
 
+export type HabitColor = 'gray' | 'silver' | 'gold' | 'emerald' | 'sapphire' | 'ruby'
+
 export interface Habit {
   id: string
   name: string
@@ -19,6 +21,11 @@ export interface Habit {
   created_by: string
   created_at: string
   updated_at: string
+  color?: HabitColor
+  days_of_week?: number[] /** 0=Sun, 1=Mon, ... 6=Sat */
+  weekly_goal_days?: number /** N из 7 для недельной цели */
+  reminder_enabled?: boolean
+  reminder_time?: string /** HH:MM */
   participants?: Array<{
     id: string
     joined_at: string

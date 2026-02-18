@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FriendsIcon, HabitsIcon, HomeIcon, ProfileIcon } from './Icons'
+import { FeedIcon, HomeIcon, ProfileIcon } from './Icons'
 import './BottomMenu.css'
 
 interface BottomMenuProps {
@@ -18,8 +18,7 @@ function BottomMenu({ currentPath }: BottomMenuProps) {
 
   const menuItems: MenuItem[] = [
     { path: '/', icon: <HomeIcon />, label: 'Главная' },
-    { path: '/habits', icon: <HabitsIcon />, label: 'Привычки' },
-    { path: '/friends', icon: <FriendsIcon />, label: 'Друзья' },
+    { path: '/feed', icon: <FeedIcon />, label: 'Лента' },
     { path: '/profile', icon: <ProfileIcon />, label: 'Профиль' },
   ]
 

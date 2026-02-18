@@ -1,16 +1,22 @@
 import { useNavigate } from 'react-router-dom'
-import type { Habit } from '../types'
+import type { Habit, HabitColor } from '../types'
 import './HabitCard.css'
 
-interface HabitCardProps {
-  habit: Habit
+const COLOR_CLASS: Record<HabitColor, string> = {
+  gray: 'habit-card--gray',
+  silver: 'habit-card--silver',
+  gold: 'habit-card--gold',
+  emerald: 'habit-card--emerald',
+  sapphire: 'habit-card--sapphire',
+  ruby: 'habit-card--ruby',
 }
 
-function HabitCard({ habit }: HabitCardProps) {
+function HabitCard({ habit }: { habit: Habit }) {
   const navigate = useNavigate()
+  const colorClass = habit.color && COLOR_CLASS[habit.color] ? COLOR_CLASS[habit.color] : 'habit-card--gold'
 
   return (
-    <div className="habit-card glass-card" onClick={() => navigate(`/habits/${habit.id}`)}>
+    <div className={`habit-card glass-card ${colorClass}`} onClick={() => navigate(`/habits/${habit.id}`)}>
       <div className="habit-header">
         <h3 className="habit-name">{habit.name}</h3>
         {habit.is_shared && (

@@ -9,6 +9,11 @@ class HabitBase(BaseModel):
     description: Optional[str] = None
     frequency: str = "daily"  # daily, weekly, custom
     is_shared: bool = False
+    color: Optional[str] = "gold"
+    days_of_week: Optional[List[int]] = None  # 1=Пн .. 7=Вс
+    weekly_goal_days: Optional[int] = None  # N из 7
+    reminder_enabled: Optional[bool] = False
+    reminder_time: Optional[str] = None  # HH:MM
 
 
 class HabitCreate(HabitBase):
@@ -20,6 +25,11 @@ class HabitUpdate(BaseModel):
     description: Optional[str] = None
     frequency: Optional[str] = None
     is_shared: Optional[bool] = None
+    color: Optional[str] = None
+    days_of_week: Optional[List[int]] = None
+    weekly_goal_days: Optional[int] = None
+    reminder_enabled: Optional[bool] = None
+    reminder_time: Optional[str] = None
 
 
 class Habit(HabitBase):

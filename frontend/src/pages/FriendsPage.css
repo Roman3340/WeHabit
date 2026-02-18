@@ -39,32 +39,8 @@
   gap: 18px;
 }
 
-.feed-avatars {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-}
-
-.feed-avatar-circle {
-  width: 70px;
-  height: 70px;
-  border-radius: 999px;
-  background: radial-gradient(
-    circle at 30% 0%,
-    rgba(248, 250, 252, 0.4),
-    rgba(15, 23, 42, 0.95)
-  );
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
-}
-
-.feed-avatar-main {
-  transform: translateX(6px);
-}
-
-.feed-avatar-secondary {
-  transform: translateX(-6px);
-  opacity: 0.85;
+.friends-page .feed-invite-card {
+  margin-bottom: var(--space-lg);
 }
 
 .feed-invite-button {
@@ -102,7 +78,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(79, 70, 229, 0.16);
+  background: rgba(212, 175, 55, 0.2);
   border-radius: 999px;
   flex-shrink: 0;
 }
@@ -124,9 +100,13 @@
   margin: 0;
 }
 
+.friends-page {
+  padding-bottom: calc(var(--bottom-menu-height) + var(--space-lg));
+}
+
 .feed-loading {
   text-align: center;
   padding: 40px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 

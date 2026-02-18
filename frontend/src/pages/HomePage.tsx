@@ -74,17 +74,7 @@ function HomePage() {
 
       {hasHabits && (
         <section className="home-section">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Мои привычки</h2>
-            <button
-              className="home-section-link"
-              type="button"
-              onClick={() => navigate('/habits')}
-            >
-              Открыть все
-            </button>
-          </div>
-
+          <h2 className="home-section-title">Мои привычки</h2>
           <div className="home-habits-list">
             {habits.map((habit) => (
               <HabitCard key={habit.id} habit={habit} />

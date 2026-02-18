@@ -30,11 +30,11 @@ function HabitsPage() {
     }
   }
 
-  const handleCreateHabit = async (data: any) => {
+  const handleCreateHabit = async (data: Parameters<typeof habitsApi.create>[0]) => {
     try {
       await habitsApi.create(data)
       setShowForm(false)
-      navigate('/habits')
+      navigate('/')
       loadHabits()
     } catch (error) {
       console.error('Failed to create habit:', error)
