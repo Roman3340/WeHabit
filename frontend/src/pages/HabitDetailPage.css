@@ -5,7 +5,15 @@
 }
 
 .habit-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 16px;
+}
+
+.habit-detail-delete {
+  padding: 8px 16px;
+  font-size: 14px;
 }
 
 .back-btn {
@@ -20,6 +28,18 @@
 
 .habit-detail-card {
   padding: 24px;
+}
+
+.habit-detail-card--gray { --detail-accent: rgba(120, 113, 108, 0.5); --detail-bg: rgba(38, 36, 34, 0.4); }
+.habit-detail-card--silver { --detail-accent: rgba(192, 192, 192, 0.5); --detail-bg: rgba(50, 50, 52, 0.4); }
+.habit-detail-card--gold { --detail-accent: rgba(212, 175, 55, 0.5); --detail-bg: rgba(36, 32, 22, 0.4); }
+.habit-detail-card--emerald { --detail-accent: rgba(45, 106, 79, 0.55); --detail-bg: rgba(18, 32, 26, 0.4); }
+.habit-detail-card--sapphire { --detail-accent: rgba(41, 98, 255, 0.5); --detail-bg: rgba(18, 24, 38, 0.4); }
+.habit-detail-card--ruby { --detail-accent: rgba(165, 42, 42, 0.55); --detail-bg: rgba(38, 22, 22, 0.4); }
+.habit-detail-card {
+  border: 1px solid var(--detail-accent, rgba(212, 175, 55, 0.35));
+  border-left-width: 4px;
+  box-shadow: -2px 0 14px var(--detail-bg, rgba(212, 175, 55, 0.1));
 }
 
 .habit-detail-title {
@@ -119,5 +139,54 @@
 
 .error {
   color: var(--danger);
+}
+
+.habit-detail-calendar {
+  margin-bottom: 24px;
+}
+
+.habit-calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.habit-calendar-day-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.habit-calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.habit-calendar-cell {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.habit-calendar-cell.completed {
+  background: var(--detail-accent, rgba(212, 175, 55, 0.4));
+  border-color: var(--detail-accent, rgba(212, 175, 55, 0.5));
+  box-shadow: 0 0 8px var(--detail-bg, rgba(212, 175, 55, 0.2));
+}
+
+.habit-calendar-cell.disabled {
+  opacity: 0.35;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.habit-calendar-cell.locked {
+  opacity: 0.5;
+  background: rgba(0, 0, 0, 0.15);
 }
 

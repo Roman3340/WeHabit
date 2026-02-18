@@ -15,6 +15,7 @@ class User(Base):
     last_name = Column(String(255))
     avatar_emoji = Column(String(10), default="👤")
     bio = Column(Text)
+    first_day_of_week = Column(String(10), default="monday")  # monday | sunday
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

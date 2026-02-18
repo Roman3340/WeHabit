@@ -125,6 +125,7 @@ export const profileApi = {
     last_name?: string
     avatar_emoji?: string
     bio?: string
+    first_day_of_week?: string
   }): Promise<User> => {
     const response = await api.put('/profile', data)
     return response.data

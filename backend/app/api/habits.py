@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
 from uuid import UUID
-from datetime import date
+from datetime import date, timedelta
 from app.db.database import get_db
 from app.core.security import get_current_user
 from app.models import User, Habit, HabitParticipant, HabitLog
@@ -34,12 +34,25 @@ async def get_habits(
         ))
     ).all()
     
-    # Добавляем информацию об участниках
+    # Текущая неделя (пн–вс) для отображения выполнений
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())  # понедельник
+    week_end = week_start + timedelta(days=6)
+
     result = []
     for habit in habits:
         participants = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit.id
         ).all()
+        # Даты выполнений текущей недели для этой привычки и пользователя
+        week_logs = db.query(func.date(HabitLog.completed_at)).filter(
+            HabitLog.habit_id == habit.id,
+            HabitLog.user_id == current_user.id,
+            func.date(HabitLog.completed_at) >= week_start,
+            func.date(HabitLog.completed_at) <= week_end,
+        ).distinct().all()
+        current_week_completions = [str(d[0]) for d in week_logs]
+
         habit_dict = {
             "id": habit.id,
             "name": habit.name,
@@ -57,6 +70,7 @@ async def get_habits(
             "participants": [
                 {"id": p.user_id, "joined_at": p.joined_at} for p in participants
             ],
+            "current_week_completions": current_week_completions,
         }
         result.append(habit_dict)
 
@@ -219,7 +233,7 @@ async def delete_habit(
         raise HTTPException(status_code=404, detail="Habit not found")
     
     if habit.created_by != current_user.id:
-        raise HTTPException(status_code=403, detail="Only creator can delete habit")
+        raise HTTPException(status_code=403, detail="Удалять привычку может только её создатель")
     
     db.delete(habit)
     db.commit()

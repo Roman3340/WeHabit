@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { profileApi } from '../services/api'
 import './SettingsPage.css'
 
 function SettingsPage() {
@@ -7,6 +8,31 @@ function SettingsPage() {
   const [firstDayOfWeek, setFirstDayOfWeek] = useState<'monday' | 'sunday'>('monday')
   const [language, setLanguage] = useState('ru')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const profile = await profileApi.get()
+        const fd = profile.first_day_of_week
+        setFirstDayOfWeek(fd === 'sunday' || fd === 'monday' ? fd : 'monday')
+      } catch (e) {
+        console.error('Failed to load profile', e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
+  const handleFirstDayChange = async (value: 'monday' | 'sunday') => {
+    setFirstDayOfWeek(value)
+    try {
+      await profileApi.update({ first_day_of_week: value })
+    } catch (e) {
+      console.error('Failed to save first day of week', e)
+    }
+  }
 
   const handleDeleteAccountClick = () => {
     setShowDeleteConfirm(true)
@@ -33,14 +59,16 @@ function SettingsPage() {
             <button
               type="button"
               className={`settings-option ${firstDayOfWeek === 'monday' ? 'active' : ''}`}
-              onClick={() => setFirstDayOfWeek('monday')}
+              onClick={() => handleFirstDayChange('monday')}
+              disabled={loading}
             >
               Понедельник
             </button>
             <button
               type="button"
               className={`settings-option ${firstDayOfWeek === 'sunday' ? 'active' : ''}`}
-              onClick={() => setFirstDayOfWeek('sunday')}
+              onClick={() => handleFirstDayChange('sunday')}
+              disabled={loading}
             >
               Воскресенье
             </button>

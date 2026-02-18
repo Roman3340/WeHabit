@@ -38,6 +38,7 @@ class Habit(HabitBase):
     created_at: datetime
     updated_at: datetime
     participants: Optional[List[dict]] = None
+    current_week_completions: Optional[List[str]] = None  # даты YYYY-MM-DD за текущую неделю
 
     class Config:
         from_attributes = True

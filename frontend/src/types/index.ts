@@ -6,6 +6,8 @@ export interface User {
   last_name?: string
   avatar_emoji: string
   bio?: string
+  /** monday | sunday — первый день недели в календаре */
+  first_day_of_week?: string
   created_at: string
   updated_at: string
 }
@@ -30,6 +32,8 @@ export interface Habit {
     id: string
     joined_at: string
   }>
+  /** Даты выполнений за текущую неделю (YYYY-MM-DD) */
+  current_week_completions?: string[]
 }
 
 export interface HabitLog {

@@ -10,6 +10,7 @@ class UserBase(BaseModel):
     last_name: Optional[str] = None
     avatar_emoji: str = "👤"
     bio: Optional[str] = None
+    first_day_of_week: Optional[str] = "monday"  # monday | sunday
 
 
 class UserCreate(UserBase):
@@ -22,6 +23,7 @@ class UserUpdate(BaseModel):
     last_name: Optional[str] = None
     avatar_emoji: Optional[str] = None
     bio: Optional[str] = None
+    first_day_of_week: Optional[str] = None
 
 
 class User(UserBase):
