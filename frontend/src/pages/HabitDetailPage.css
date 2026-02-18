@@ -50,7 +50,7 @@
 }
 
 .habit-detail-card {
-  padding: 24px;
+  padding: 8px 0 24px;
 }
 
 .habit-detail-card--gray { --detail-accent: rgba(120, 113, 108, 0.5); --detail-bg: rgba(38, 36, 34, 0.4); }
@@ -60,9 +60,8 @@
 .habit-detail-card--sapphire { --detail-accent: rgba(41, 98, 255, 0.5); --detail-bg: rgba(18, 24, 38, 0.4); }
 .habit-detail-card--ruby { --detail-accent: rgba(165, 42, 42, 0.55); --detail-bg: rgba(38, 22, 22, 0.4); }
 .habit-detail-card {
-  border: 1px solid var(--detail-accent, rgba(212, 175, 55, 0.35));
-  border-left-width: 4px;
-  box-shadow: -2px 0 14px var(--detail-bg, rgba(212, 175, 55, 0.1));
+  border: none;
+  box-shadow: none;
 }
 
 .habit-detail-title {

@@ -80,6 +80,33 @@
   box-shadow: 0 0 10px var(--habit-glow, rgba(212, 175, 55, 0.55));
 }
 
+/* Яркое состояние галочки под цвет карточки */
+.habit-card--gold .habit-quick-toggle.completed,
+.habit-card .habit-quick-toggle.completed {
+  background: rgba(212, 175, 55, 0.9);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.65);
+}
+.habit-card--gray .habit-quick-toggle.completed {
+  background: rgba(161, 157, 152, 0.9);
+  box-shadow: 0 0 10px rgba(120, 113, 108, 0.55);
+}
+.habit-card--silver .habit-quick-toggle.completed {
+  background: rgba(220, 220, 220, 0.95);
+  box-shadow: 0 0 10px rgba(192, 192, 192, 0.65);
+}
+.habit-card--emerald .habit-quick-toggle.completed {
+  background: rgba(64, 145, 108, 0.9);
+  box-shadow: 0 0 10px rgba(45, 106, 79, 0.65);
+}
+.habit-card--sapphire .habit-quick-toggle.completed {
+  background: rgba(71, 128, 255, 0.9);
+  box-shadow: 0 0 10px rgba(41, 98, 255, 0.65);
+}
+.habit-card--ruby .habit-quick-toggle.completed {
+  background: rgba(200, 60, 60, 0.9);
+  box-shadow: 0 0 10px rgba(165, 42, 42, 0.65);
+}
+
 .habit-days-block {
   display: flex;
   flex-direction: column;

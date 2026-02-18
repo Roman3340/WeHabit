@@ -90,3 +90,22 @@
     rgba(22, 20, 18, 0.95)
   );
 }
+
+.profile-menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.profile-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: var(--accent);
+}
+
+.profile-menu-label {
+  flex: 1;
+}

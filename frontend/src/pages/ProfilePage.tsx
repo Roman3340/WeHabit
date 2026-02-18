@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { profileApi } from '../services/api'
 import type { User } from '../types'
+import { TrophyIcon, FriendsIcon, BellIcon, SettingsIcon } from '../components/Icons'
 import './ProfilePage.css'
 
 const MENU_ITEMS = [
-  { path: '/profile/achievements', label: 'Достижения' },
-  { path: '/profile/friends', label: 'Друзья' },
-  { path: '/profile/notifications', label: 'Уведомления' },
-  { path: '/profile/settings', label: 'Настройки' },
+  { path: '/profile/achievements', label: 'Достижения', icon: <TrophyIcon width={22} height={22} /> },
+  { path: '/profile/friends', label: 'Друзья', icon: <FriendsIcon width={22} height={22} /> },
+  { path: '/profile/notifications', label: 'Уведомления', icon: <BellIcon width={22} height={22} /> },
+  { path: '/profile/settings', label: 'Настройки', icon: <SettingsIcon width={22} height={22} /> },
 ]
 
 function ProfilePage() {
@@ -73,7 +74,10 @@ function ProfilePage() {
             className="glass-card profile-menu-item"
             onClick={() => navigate(item.path)}
           >
-            {item.label}
+            <div className="profile-menu-item-content">
+              <span className="profile-menu-icon">{item.icon}</span>
+              <span className="profile-menu-label">{item.label}</span>
+            </div>
           </button>
         ))}
       </nav>

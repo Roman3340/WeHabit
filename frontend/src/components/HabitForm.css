@@ -1,38 +1,16 @@
 .habit-form {
-  padding: 22px 20px 20px;
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  padding: 8px 0 0;
 }
 
-/* Тёмный оттенок формы по выбранному цвету */
-.habit-form--gray {
-  background: linear-gradient(135deg, rgba(38, 36, 34, 0.98), rgba(28, 26, 24, 0.95));
-  border-color: rgba(120, 113, 108, 0.35);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5), 0 0 24px rgba(120, 113, 108, 0.08);
-}
-.habit-form--silver {
-  background: linear-gradient(135deg, rgba(36, 36, 38, 0.98), rgba(26, 26, 28, 0.95));
-  border-color: rgba(192, 192, 192, 0.3);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5), 0 0 24px rgba(192, 192, 192, 0.1);
-}
-.habit-form--gold {
-  background: linear-gradient(135deg, rgba(36, 32, 22, 0.98), rgba(26, 22, 14, 0.95));
-  border-color: rgba(212, 175, 55, 0.35);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5), 0 0 24px rgba(212, 175, 55, 0.12);
-}
-.habit-form--emerald {
-  background: linear-gradient(135deg, rgba(18, 32, 26, 0.98), rgba(12, 24, 20, 0.95));
-  border-color: rgba(45, 106, 79, 0.4);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5), 0 0 24px rgba(45, 106, 79, 0.12);
-}
-.habit-form--sapphire {
-  background: linear-gradient(135deg, rgba(18, 24, 38, 0.98), rgba(12, 16, 28, 0.95));
-  border-color: rgba(41, 98, 255, 0.35);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5), 0 0 24px rgba(41, 98, 255, 0.12);
-}
+/* Цвет формы больше не подсвечивает общий блок — используем только для внутренних акцентов (оставлено на будущее) */
+.habit-form--gray,
+.habit-form--silver,
+.habit-form--gold,
+.habit-form--emerald,
+.habit-form--sapphire,
 .habit-form--ruby {
-  background: linear-gradient(135deg, rgba(38, 22, 22, 0.98), rgba(28, 14, 14, 0.95));
-  border-color: rgba(165, 42, 42, 0.4);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5), 0 0 24px rgba(165, 42, 42, 0.12);
+  background: none;
+  box-shadow: none;
 }
 
 .form-group {
