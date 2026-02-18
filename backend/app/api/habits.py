@@ -85,22 +85,39 @@ async def create_habit(
     db.add(habit)
     db.commit()
     db.refresh(habit)
-    
+
     # Добавляем создателя как участника
     participant = HabitParticipant(habit_id=habit.id, user_id=current_user.id)
     db.add(participant)
-    
+
     # Добавляем других участников, если это совместная привычка
     if habit_data.is_shared and habit_data.participant_ids:
         for friend_id in habit_data.participant_ids:
             if friend_id != current_user.id:
                 participant = HabitParticipant(habit_id=habit.id, user_id=friend_id)
                 db.add(participant)
-    
+
     db.commit()
     db.refresh(habit)
-    
-    return habit
+
+    # Ответ в том же формате, что и get_habit (participants — список dict)
+    participants = db.query(HabitParticipant).filter(HabitParticipant.habit_id == habit.id).all()
+    return {
+        "id": habit.id,
+        "name": habit.name,
+        "description": habit.description,
+        "frequency": habit.frequency,
+        "is_shared": habit.is_shared,
+        "created_by": habit.created_by,
+        "created_at": habit.created_at,
+        "updated_at": habit.updated_at,
+        "color": getattr(habit, "color", None),
+        "days_of_week": getattr(habit, "days_of_week", None),
+        "weekly_goal_days": getattr(habit, "weekly_goal_days", None),
+        "reminder_enabled": getattr(habit, "reminder_enabled", None),
+        "reminder_time": getattr(habit, "reminder_time", None),
+        "participants": [{"id": p.user_id, "joined_at": p.joined_at} for p in participants],
+    }
 
 
 @router.get("/{habit_id}", response_model=HabitSchema)

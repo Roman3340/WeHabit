@@ -3,13 +3,13 @@ import type { HabitColor } from '../types'
 import './HabitForm.css'
 
 const DAY_LABELS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
-const COLORS: { value: HabitColor; label: string; class: string }[] = [
-  { value: 'gray', label: 'Серый', class: 'habit-card--gray' },
-  { value: 'silver', label: 'Серебро', class: 'habit-card--silver' },
-  { value: 'gold', label: 'Золото', class: 'habit-card--gold' },
-  { value: 'emerald', label: 'Изумруд', class: 'habit-card--emerald' },
-  { value: 'sapphire', label: 'Сапфир', class: 'habit-card--sapphire' },
-  { value: 'ruby', label: 'Рубин', class: 'habit-card--ruby' },
+const COLORS: { value: HabitColor; label: string }[] = [
+  { value: 'gray', label: 'Серый' },
+  { value: 'silver', label: 'Серебро' },
+  { value: 'gold', label: 'Золото' },
+  { value: 'emerald', label: 'Изумруд' },
+  { value: 'sapphire', label: 'Сапфир' },
+  { value: 'ruby', label: 'Рубин' },
 ]
 
 export interface HabitFormData {
@@ -38,7 +38,9 @@ function HabitForm({ onSubmit, initialData }: HabitFormProps) {
   const [color, setColor] = useState<HabitColor>(initialData?.color || 'gold')
   const [useWeeklyGoal, setUseWeeklyGoal] = useState(!!initialData?.weekly_goal_days)
   const [weeklyGoalDays, setWeeklyGoalDays] = useState(initialData?.weekly_goal_days ?? 4)
-  const [daysOfWeek, setDaysOfWeek] = useState<number[]>(initialData?.days_of_week?.length ? initialData.days_of_week : [1, 2, 3, 4, 5])
+  const [daysOfWeek, setDaysOfWeek] = useState<number[]>(
+    initialData?.days_of_week?.length ? initialData.days_of_week : [1, 2, 3, 4, 5]
+  )
   const [reminderEnabled, setReminderEnabled] = useState(initialData?.reminder_enabled ?? false)
   const [reminderTime, setReminderTime] = useState(initialData?.reminder_time || '09:00')
 
@@ -68,7 +70,10 @@ function HabitForm({ onSubmit, initialData }: HabitFormProps) {
   }
 
   return (
-    <form className="habit-form glass-card" onSubmit={handleSubmit}>
+    <form
+      className={`habit-form glass-card habit-form--${color}`}
+      onSubmit={handleSubmit}
+    >
       <div className="form-group">
         <div className="habit-form-section-title">Название</div>
         <input
@@ -88,7 +93,7 @@ function HabitForm({ onSubmit, initialData }: HabitFormProps) {
             <button
               key={c.value}
               type="button"
-              className={`habit-form-color-btn ${color === c.value ? 'active' : ''} ${c.class}`}
+              className={`habit-form-color-btn habit-form-color-btn--${c.value} ${color === c.value ? 'active' : ''}`}
               onClick={() => setColor(c.value)}
               title={c.label}
             />
@@ -97,36 +102,28 @@ function HabitForm({ onSubmit, initialData }: HabitFormProps) {
       </div>
 
       <div className="form-group">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={useWeeklyGoal}
-            onChange={(e) => setUseWeeklyGoal(e.target.checked)}
-          />
-          <span>Недельная цель (N дней в неделю, любые)</span>
-        </label>
-      </div>
-
-      {useWeeklyGoal ? (
-        <div className="form-group">
-          <div className="habit-form-section-title">Дней в неделю</div>
-          <div className="habit-form-days-select">
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <button
-                key={n}
-                type="button"
-                className={`btn btn-secondary ${weeklyGoalDays === n ? 'active' : ''}`}
-                onClick={() => setWeeklyGoalDays(n)}
-              >
-                {n}
-              </button>
-            ))}
+        <div className="habit-form-section-title">Дни недели</div>
+        {useWeeklyGoal ? (
+          <div className="habit-form-weekly-block">
+            <button
+              type="button"
+              className="habit-form-arrow"
+              onClick={() => setWeeklyGoalDays((n) => Math.max(1, n - 1))}
+              aria-label="Меньше дней"
+            >
+              ←
+            </button>
+            <span className="habit-form-weekly-value">{weeklyGoalDays}/7 дней</span>
+            <button
+              type="button"
+              className="habit-form-arrow"
+              onClick={() => setWeeklyGoalDays((n) => Math.min(7, n + 1))}
+              aria-label="Больше дней"
+            >
+              →
+            </button>
           </div>
-          <p className="habit-form-hint">Цель: выполнять привычку {weeklyGoalDays} раз в неделю</p>
-        </div>
-      ) : (
-        <div className="form-group">
-          <div className="habit-form-section-title">Дни недели</div>
+        ) : (
           <div className="habit-form-days">
             {DAY_LABELS.map((label, i) => {
               const dayNum = i + 1
@@ -142,29 +139,19 @@ function HabitForm({ onSubmit, initialData }: HabitFormProps) {
               )
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div className="form-group">
-        <div className="habit-form-section-title">Напоминание</div>
-        <label className="checkbox-label">
+      <div className="form-group habit-form-toggle-row">
+        <span className="habit-form-toggle-label">Недельная цель</span>
+        <label className="toggle">
           <input
             type="checkbox"
-            checked={reminderEnabled}
-            onChange={(e) => setReminderEnabled(e.target.checked)}
+            checked={useWeeklyGoal}
+            onChange={(e) => setUseWeeklyGoal(e.target.checked)}
           />
-          <span>Включить напоминание</span>
+          <span className="toggle-slider" />
         </label>
-        {reminderEnabled && (
-          <div className="habit-form-time">
-            <input
-              type="time"
-              className="input"
-              value={reminderTime}
-              onChange={(e) => setReminderTime(e.target.value)}
-            />
-          </div>
-        )}
       </div>
 
       <div className="form-group">
@@ -178,16 +165,39 @@ function HabitForm({ onSubmit, initialData }: HabitFormProps) {
         />
       </div>
 
-      <div className="form-group">
-        <label className="checkbox-label">
+      <div className="form-group habit-form-toggle-row">
+        <span className="habit-form-toggle-label">Совместная привычка с друзьями</span>
+        <label className="toggle">
           <input
             type="checkbox"
             checked={is_shared}
             onChange={(e) => setShared(e.target.checked)}
           />
-          <span>Совместная привычка (с друзьями)</span>
+          <span className="toggle-slider" />
         </label>
       </div>
+
+      <div className="form-group habit-form-toggle-row">
+        <span className="habit-form-toggle-label">Включить напоминание</span>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={reminderEnabled}
+            onChange={(e) => setReminderEnabled(e.target.checked)}
+          />
+          <span className="toggle-slider" />
+        </label>
+      </div>
+      {reminderEnabled && (
+        <div className="form-group habit-form-time-wrap">
+          <input
+            type="time"
+            className="input habit-form-time-input"
+            value={reminderTime}
+            onChange={(e) => setReminderTime(e.target.value)}
+          />
+        </div>
+      )}
 
       <button type="submit" className="btn">
         Создать привычку

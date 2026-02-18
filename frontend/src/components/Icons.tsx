@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement>
@@ -62,17 +63,18 @@ export function HabitsIcon(props: IconProps) {
 }
 
 export function FeedIcon(props: IconProps) {
+  const id = `feed-${useId().replace(/:/g, '')}`
   return (
-    <svg {...baseProps} {...props}>
+    <svg {...baseProps} {...props} aria-hidden="true">
       <defs>
-        <linearGradient id="feedGradient" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#d4af37" />
           <stop offset="100%" stopColor="#b8860b" />
         </linearGradient>
       </defs>
-      <path d="M4 6h16" stroke="url(#feedGradient)" strokeLinecap="round" />
-      <path d="M4 12h16" stroke="url(#feedGradient)" strokeLinecap="round" />
-      <path d="M4 18h10" stroke="url(#feedGradient)" strokeLinecap="round" />
+      <path d="M4 6h16" stroke={`url(#${id})`} strokeLinecap="round" />
+      <path d="M4 12h16" stroke={`url(#${id})`} strokeLinecap="round" />
+      <path d="M4 18h10" stroke={`url(#${id})`} strokeLinecap="round" />
     </svg>
   )
 }
