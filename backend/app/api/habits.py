@@ -54,11 +54,11 @@ async def get_habits(
         current_week_completions = [str(d[0]) for d in week_logs]
 
         # Максимальная серия дней подряд (как в статистике)
-        daily_dates = db.query(func.date(HabitLog.completed_at).label("date")).filter(
+        daily_dates = db.query(func.date(HabitLog.completed_at)).filter(
             HabitLog.habit_id == habit.id,
             HabitLog.user_id == current_user.id,
         ).group_by(func.date(HabitLog.completed_at)).order_by(func.date(HabitLog.completed_at)).all()
-        completion_dates = [row.date for row in daily_dates]
+        completion_dates = [row[0] for row in daily_dates]
         max_streak = 0
         if completion_dates:
             cur = 1
@@ -85,7 +85,6 @@ async def get_habits(
             "weekly_goal_days": getattr(habit, "weekly_goal_days", None),
             "reminder_enabled": getattr(habit, "reminder_enabled", None),
             "reminder_time": getattr(habit, "reminder_time", None),
-            "emoji": getattr(habit, "emoji", None),
             "participants": [
                 {"id": p.user_id, "joined_at": p.joined_at} for p in participants
             ],

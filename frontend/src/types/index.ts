@@ -28,14 +28,13 @@ export interface Habit {
   weekly_goal_days?: number /** N из 7 для недельной цели */
   reminder_enabled?: boolean
   reminder_time?: string /** HH:MM */
-  emoji?: string
   participants?: Array<{
     id: string
     joined_at: string
   }>
   /** Даты выполнений за текущую неделю (YYYY-MM-DD) */
   current_week_completions?: string[]
-  /** Максимальная серия дней подряд (как в статистике) */
+  /** Максимальная серия дней подряд (как в статистике; для карточки) */
   current_streak?: number
 }
 

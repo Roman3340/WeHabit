@@ -23,8 +23,7 @@ ALTER TABLE habits
   ADD COLUMN IF NOT EXISTS days_of_week INTEGER[],
   ADD COLUMN IF NOT EXISTS weekly_goal_days INTEGER,
   ADD COLUMN IF NOT EXISTS reminder_enabled BOOLEAN DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS reminder_time VARCHAR(5),
-  ADD COLUMN IF NOT EXISTS emoji VARCHAR(32);
+  ADD COLUMN IF NOT EXISTS reminder_time VARCHAR(5);
 ```
 
 Если ваша версия PostgreSQL не поддерживает `ADD COLUMN IF NOT EXISTS` (старые версии), выполните по одной колонке и пропустите уже существующие вручную:
@@ -35,7 +34,6 @@ ALTER TABLE habits ADD COLUMN days_of_week INTEGER[];
 ALTER TABLE habits ADD COLUMN weekly_goal_days INTEGER;
 ALTER TABLE habits ADD COLUMN reminder_enabled BOOLEAN DEFAULT FALSE;
 ALTER TABLE habits ADD COLUMN reminder_time VARCHAR(5);
-ALTER TABLE habits ADD COLUMN emoji VARCHAR(32);
 ```
 
 (Если какая-то колонка уже есть, вы получите ошибку — просто не выполняйте эту строку повторно.)
@@ -54,7 +52,8 @@ ALTER TABLE habits
   DROP COLUMN IF EXISTS days_of_week,
   DROP COLUMN IF EXISTS weekly_goal_days,
   DROP COLUMN IF EXISTS reminder_enabled,
-  DROP COLUMN IF EXISTS reminder_time;
+  DROP COLUMN IF EXISTS reminder_time,
+  DROP COLUMN IF EXISTS emoji;
 ```
 
 После отката тоже перезапустите бэкенд.

@@ -111,7 +111,13 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
               <span className="participants-count">{habit.participants.length} участников</span>
             )}
           </div>
-          <div className="habit-streak-pill" title="Дней подряд">
+          <div className="habit-streak" title="Серия дней подряд">
+            <span className="habit-streak-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2C12 2 8 6 8 10a4 4 0 0 0 8 0c0-4-4-8-4-8z" />
+                <path d="M8.5 13.5C8 14.3 8 16 10 17.5" />
+              </svg>
+            </span>
             <span className="habit-streak-number">{streak}</span>
           </div>
         </div>

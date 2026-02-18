@@ -58,7 +58,6 @@ export const habitsApi = {
     weekly_goal_days?: number
     reminder_enabled?: boolean
     reminder_time?: string
-    emoji?: string
   }): Promise<Habit> => {
     const response = await api.post('/habits', data)
     return response.data
@@ -74,7 +73,6 @@ export const habitsApi = {
     weekly_goal_days?: number
     reminder_enabled?: boolean
     reminder_time?: string
-    emoji?: string
   }): Promise<Habit> => {
     const response = await api.put(`/habits/${id}`, data)
     return response.data

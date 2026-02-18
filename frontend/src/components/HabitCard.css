@@ -146,17 +146,18 @@
   color: var(--text-muted);
 }
 
-.habit-streak-pill {
-  min-width: 40px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(212, 175, 55, 0.45);
-  background: rgba(0, 0, 0, 0.5);
+.habit-streak {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.habit-streak-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  color: var(--accent);
 }
 
 .habit-streak-number {

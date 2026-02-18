@@ -7,7 +7,6 @@ from uuid import UUID
 class HabitBase(BaseModel):
     name: str
     description: Optional[str] = None
-    emoji: Optional[str] = None
     frequency: str = "daily"  # daily, weekly, custom
     is_shared: bool = False
     color: Optional[str] = "gold"
@@ -24,7 +23,6 @@ class HabitCreate(HabitBase):
 class HabitUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    emoji: Optional[str] = None
     frequency: Optional[str] = None
     is_shared: Optional[bool] = None
     color: Optional[str] = None
@@ -41,6 +39,7 @@ class Habit(HabitBase):
     updated_at: datetime
     participants: Optional[List[dict]] = None
     current_week_completions: Optional[List[str]] = None  # даты YYYY-MM-DD за текущую неделю
+    current_streak: Optional[int] = None  # максимальная серия дней подряд (для карточки)
 
     class Config:
         from_attributes = True

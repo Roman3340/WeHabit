@@ -23,7 +23,6 @@ export interface HabitFormData {
   weekly_goal_days?: number
   reminder_enabled?: boolean
   reminder_time?: string
-  emoji?: string
 }
 
 interface HabitFormProps {
@@ -45,8 +44,6 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
   )
   const [reminderEnabled, setReminderEnabled] = useState(initialData?.reminder_enabled ?? false)
   const [reminderTime, setReminderTime] = useState(initialData?.reminder_time || '09:00')
-   const [emoji, setEmoji] = useState(initialData?.emoji || '⭐')
-   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false)
 
   const handleEnterAsDone = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
@@ -77,7 +74,6 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
       weekly_goal_days: useWeeklyGoal ? weeklyGoalDays : undefined,
       reminder_enabled: reminderEnabled,
       reminder_time: reminderEnabled ? reminderTime : undefined,
-      emoji,
     })
   }
 
@@ -88,43 +84,16 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
     >
       <div className="form-group">
         <div className="habit-form-section-title">Название</div>
-        <div className="habit-form-name-row">
-          <button
-            type="button"
-            className="habit-form-emoji"
-            onClick={() => setEmojiPickerOpen((v) => !v)}
-            aria-label="Выбрать эмодзи для привычки"
-          >
-            {emoji}
-          </button>
-          <input
-            type="text"
-            className="input"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={handleEnterAsDone}
-            placeholder="Например: Утренняя прогулка"
-            enterKeyHint="done"
-            required
-          />
-        </div>
-        {emojiPickerOpen && (
-          <div className="habit-form-emoji-popover">
-            {['⭐', '🔥', '💧', '📚', '🏃', '🧘', '☕', '🍎', '🌙', '🌞'].map((e) => (
-              <button
-                key={e}
-                type="button"
-                className={`habit-form-emoji-option ${emoji === e ? 'active' : ''}`}
-                onClick={() => {
-                  setEmoji(e)
-                  setEmojiPickerOpen(false)
-                }}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        )}
+        <input
+          type="text"
+          className="input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={handleEnterAsDone}
+          placeholder="Например: Утренняя прогулка"
+          enterKeyHint="done"
+          required
+        />
       </div>
 
       <div className="form-group">

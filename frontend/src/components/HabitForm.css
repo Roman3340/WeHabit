@@ -17,61 +17,6 @@
   margin-bottom: 20px;
 }
 
-.habit-form-name-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.habit-form-emoji {
-  width: 44px;
-  height: 44px;
-  border-radius: 16px;
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.6rem;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s, border-color 0.2s;
-}
-
-.habit-form-emoji:hover {
-  background: rgba(212, 175, 55, 0.12);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-}
-
-.habit-form-emoji-popover {
-  margin-top: 8px;
-  padding: 8px 10px;
-  border-radius: 16px;
-  background: rgba(15, 15, 18, 0.96);
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.habit-form-emoji-option {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: 2px solid transparent;
-  background: rgba(255, 255, 255, 0.04);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-}
-
-.habit-form-emoji-option.active {
-  border-color: var(--accent);
-  background: rgba(212, 175, 55, 0.18);
-}
-
 .form-group label {
   display: block;
   font-size: 14px;
