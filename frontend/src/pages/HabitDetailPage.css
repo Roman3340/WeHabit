@@ -185,8 +185,53 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
-.habit-calendar-cell.locked {
-  opacity: 0.5;
-  background: rgba(0, 0, 0, 0.15);
+.habit-calendar-cell {
+  cursor: pointer;
+}
+
+.habit-calendar-cell:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.habit-cell-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-md);
+}
+
+.habit-cell-popup {
+  max-width: 340px;
+  width: 100%;
+  padding: var(--space-lg);
+}
+
+.habit-cell-popup-title {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.habit-cell-popup-date {
+  margin: 0 0 var(--space-md) 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.habit-cell-popup .btn {
+  width: 100%;
+  margin-bottom: var(--space-sm);
+}
+
+.habit-cell-popup-close {
+  margin-bottom: 0;
+}
+
+.stat-item--extra .stat-value {
+  color: var(--accent);
 }
 

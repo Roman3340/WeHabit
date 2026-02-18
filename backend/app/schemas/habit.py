@@ -46,6 +46,7 @@ class Habit(HabitBase):
 
 class HabitLogCreate(BaseModel):
     notes: Optional[str] = None
+    date: Optional[str] = None  # YYYY-MM-DD, если не указано — сегодня
 
 
 class HabitLog(BaseModel):

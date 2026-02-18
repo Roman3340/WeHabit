@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
 from uuid import UUID
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, time, timezone
 from app.db.database import get_db
 from app.core.security import get_current_user
 from app.models import User, Habit, HabitParticipant, HabitLog
@@ -247,12 +247,11 @@ async def complete_habit(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Отметить выполнение привычки"""
+    """Отметить выполнение привычки (за сегодня или за указанную дату)."""
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if not habit:
         raise HTTPException(status_code=404, detail="Habit not found")
-    
-    # Проверка доступа
+
     if habit.created_by != current_user.id:
         participant = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit_id,
@@ -260,25 +259,71 @@ async def complete_habit(
         ).first()
         if not participant:
             raise HTTPException(status_code=403, detail="Access denied")
-    
-    # Проверка, не выполнена ли уже сегодня
-    today = date.today()
+
+    target_date = date.today()
+    if getattr(log_data, "date", None):
+        try:
+            target_date = datetime.strptime(log_data.date, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid date format (use YYYY-MM-DD)")
+
     existing_log = db.query(HabitLog).filter(
         HabitLog.habit_id == habit_id,
         HabitLog.user_id == current_user.id,
-        func.date(HabitLog.completed_at) == today
+        func.date(HabitLog.completed_at) == target_date
     ).first()
-    
+
     if existing_log:
-        raise HTTPException(status_code=400, detail="Habit already completed today")
-    
+        raise HTTPException(status_code=400, detail="Habit already completed for this date")
+
+    completed_at = datetime.combine(target_date, time(12, 0), tzinfo=timezone.utc)
     log = HabitLog(
         habit_id=habit_id,
         user_id=current_user.id,
-        notes=log_data.notes
+        notes=log_data.notes,
+        completed_at=completed_at,
     )
     db.add(log)
     db.commit()
     db.refresh(log)
     return log
+
+
+@router.delete("/{habit_id}/logs/{log_date}")
+async def remove_habit_log(
+    habit_id: UUID,
+    log_date: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Убрать отметку о выполнении за указанную дату (YYYY-MM-DD)."""
+    habit = db.query(Habit).filter(Habit.id == habit_id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    if habit.created_by != current_user.id:
+        participant = db.query(HabitParticipant).filter(
+            HabitParticipant.habit_id == habit_id,
+            HabitParticipant.user_id == current_user.id
+        ).first()
+        if not participant:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    try:
+        target_date = datetime.strptime(log_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format (use YYYY-MM-DD)")
+
+    log = db.query(HabitLog).filter(
+        HabitLog.habit_id == habit_id,
+        HabitLog.user_id == current_user.id,
+        func.date(HabitLog.completed_at) == target_date
+    ).first()
+
+    if not log:
+        raise HTTPException(status_code=404, detail="No completion for this date")
+
+    db.delete(log)
+    db.commit()
+    return {"message": "Completion removed"}
 

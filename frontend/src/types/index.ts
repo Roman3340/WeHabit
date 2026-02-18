@@ -63,6 +63,8 @@ export interface HabitStats {
   habit_id: string
   total_completions: number
   current_streak: number
+  /** Дней выполнено сверх расписания (не в запланированный день или сверх цели по неделе) */
+  above_norm_count?: number
   daily_completions: Array<{
     date: string
     count: number

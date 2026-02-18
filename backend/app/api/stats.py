@@ -67,11 +67,34 @@ async def get_habit_stats(
             check_date -= timedelta(days=1)
         else:
             break
-    
+
+    # Сверх нормы: выполнение в день, не входящий в расписание (или сверх цели по неделе)
+    above_norm_count = 0
+    days_of_week = getattr(habit, "days_of_week", None)
+    weekly_goal_days = getattr(habit, "weekly_goal_days", None)
+
+    if days_of_week and len(days_of_week) > 0:
+        for dc in daily_completions:
+            d = dc.date
+            weekday_iso = d.weekday() + 1  # Python: 0=Mon -> 1, 6=Sun -> 7
+            if weekday_iso not in days_of_week:
+                above_norm_count += dc.count
+    elif weekly_goal_days is not None and weekly_goal_days > 0:
+        week_start = start_date - timedelta(days=start_date.weekday())
+        week_completions = {}
+        for dc in daily_completions:
+            d = dc.date
+            wstart = d - timedelta(days=d.weekday())
+            key = str(wstart)
+            week_completions[key] = week_completions.get(key, 0) + dc.count
+        for count in week_completions.values():
+            above_norm_count += max(0, count - weekly_goal_days)
+
     return {
         "habit_id": habit_id,
         "total_completions": total_completions or 0,
         "current_streak": current_streak,
+        "above_norm_count": above_norm_count,
         "daily_completions": [
             {"date": str(dc.date), "count": dc.count} for dc in daily_completions
         ],

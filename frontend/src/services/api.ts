@@ -82,9 +82,13 @@ export const habitsApi = {
     await api.delete(`/habits/${id}`)
   },
   
-  complete: async (id: string, notes?: string): Promise<HabitLog> => {
-    const response = await api.post(`/habits/${id}/complete`, { notes })
+  complete: async (id: string, options?: { notes?: string; date?: string }): Promise<HabitLog> => {
+    const response = await api.post(`/habits/${id}/complete`, { notes: options?.notes, date: options?.date })
     return response.data
+  },
+
+  removeLog: async (id: string, dateStr: string): Promise<void> => {
+    await api.delete(`/habits/${id}/logs/${dateStr}`)
   },
 }
 

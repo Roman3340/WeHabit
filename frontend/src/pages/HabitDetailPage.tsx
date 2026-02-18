@@ -6,6 +6,16 @@ import { getWeekStart, addDays, getDayLabels, formatDateKey } from '../utils/wee
 import type { FirstDayOfWeek } from '../utils/week'
 import './HabitDetailPage.css'
 
+const WEEKDAY_NAMES = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+
+function formatDateLabel(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const day = date.getDay()
+  const weekdayName = WEEKDAY_NAMES[day === 0 ? 6 : day - 1]
+  return `${weekdayName}, ${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`
+}
+
 function HabitDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -15,6 +25,8 @@ function HabitDetailPage() {
   const [loading, setLoading] = useState(true)
   const [completing, setCompleting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [popupDate, setPopupDate] = useState<string | null>(null)
+  const [popupLoading, setPopupLoading] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -73,6 +85,38 @@ function HabitDetailPage() {
       }
     } finally {
       setCompleting(false)
+    }
+  }
+
+  const handleCompleteForDate = async (dateStr: string) => {
+    if (!id) return
+    setPopupLoading(true)
+    try {
+      await habitsApi.complete(id, { date: dateStr })
+      await loadStats()
+      setPopupDate(null)
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        alert('В этот день уже есть отметка.')
+      } else {
+        alert('Ошибка при отметке')
+      }
+    } finally {
+      setPopupLoading(false)
+    }
+  }
+
+  const handleRemoveLog = async (dateStr: string) => {
+    if (!id) return
+    setPopupLoading(true)
+    try {
+      await habitsApi.removeLog(id, dateStr)
+      await loadStats()
+      setPopupDate(null)
+    } catch (error: any) {
+      alert('Ошибка при снятии отметки')
+    } finally {
+      setPopupLoading(false)
     }
   }
 
@@ -181,17 +225,13 @@ function HabitDetailPage() {
               {week.map((cellDate, di) => {
                 const dateStr = formatDateKey(cellDate)
                 const completed = completedSet.has(dateStr)
-                const weekdayNum = (cellDate.getDay() + 6) % 7 + 1
-                const inSchedule = !habit.days_of_week?.length || habit.days_of_week.includes(weekdayNum)
-                const weekCompletions = week.filter((d) => completedSet.has(formatDateKey(d))).length
-                const goalReached = habit.weekly_goal_days != null && weekCompletions >= habit.weekly_goal_days
-                const locked = habit.weekly_goal_days != null && goalReached && !completed
-                const disabled = habit.days_of_week?.length && !inSchedule
                 return (
-                  <div
+                  <button
                     key={di}
-                    className={`habit-calendar-cell ${completed ? 'completed' : ''} ${disabled ? 'disabled' : ''} ${locked ? 'locked' : ''}`}
-                    title={dateStr}
+                    type="button"
+                    className={`habit-calendar-cell ${completed ? 'completed' : ''}`}
+                    title={formatDateLabel(dateStr)}
+                    onClick={() => setPopupDate(dateStr)}
                   />
                 )
               })}
@@ -211,6 +251,12 @@ function HabitDetailPage() {
                 <div className="stat-value">{stats.total_completions}</div>
                 <div className="stat-label">Всего выполнено</div>
               </div>
+              {(stats.above_norm_count ?? 0) > 0 && (
+                <div className="stat-item stat-item--extra">
+                  <div className="stat-value">{stats.above_norm_count}</div>
+                  <div className="stat-label">Сверх нормы</div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -223,6 +269,37 @@ function HabitDetailPage() {
           {completing ? 'Отмечаю...' : '✓ Отметить выполнение'}
         </button>
       </div>
+
+      {popupDate && (
+        <div className="habit-cell-popup-overlay" onClick={() => setPopupDate(null)}>
+          <div className="glass-card habit-cell-popup" onClick={(e) => e.stopPropagation()}>
+            <h3 className="habit-cell-popup-title">{formatDateLabel(popupDate)}</h3>
+            <p className="habit-cell-popup-date">{popupDate}</p>
+            {completedSet.has(popupDate) ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => handleRemoveLog(popupDate)}
+                disabled={popupLoading}
+              >
+                {popupLoading ? '…' : 'Убрать отметку'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-success"
+                onClick={() => handleCompleteForDate(popupDate)}
+                disabled={popupLoading}
+              >
+                {popupLoading ? '…' : 'Отметить выполнение'}
+              </button>
+            )}
+            <button type="button" className="btn btn-secondary habit-cell-popup-close" onClick={() => setPopupDate(null)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
