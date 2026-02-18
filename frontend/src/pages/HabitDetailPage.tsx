@@ -182,18 +182,57 @@ function HabitDetailPage() {
   )
 
   const dayLabels = useMemo(() => getDayLabels(firstDay), [firstDay])
-  const weekStart = useMemo(() => getWeekStart(new Date(), firstDay), [firstDay])
-  const gridWeeks = useMemo(() => {
-    const weeks: Date[][] = []
-    for (let w = 0; w < 4; w++) {
-      const row: Date[] = []
+
+  const today = useMemo(() => new Date(), [])
+  const monthLabel = useMemo(() => {
+    const monthNames = [
+      'Январь',
+      'Февраль',
+      'Март',
+      'Апрель',
+      'Май',
+      'Июнь',
+      'Июль',
+      'Август',
+      'Сентябрь',
+      'Октябрь',
+      'Ноябрь',
+      'Декабрь',
+    ]
+    return `${monthNames[today.getMonth()]} ${today.getFullYear()}`
+  }, [today])
+
+  const monthWeeks = useMemo(() => {
+    const year = today.getFullYear()
+    const month = today.getMonth()
+    const firstOfMonth = new Date(year, month, 1)
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    // 1=Пн .. 7=Вс
+    const firstWeekdayIso = ((firstOfMonth.getDay() + 6) % 7) + 1
+    const startOfWeek = firstDay === 'sunday' ? 7 : 1
+    const firstCellIndex = (firstWeekdayIso - startOfWeek + 7) % 7
+
+    const totalCells = firstCellIndex + daysInMonth
+    const rows = Math.ceil(totalCells / 7)
+
+    const weeks: (Date | null)[][] = []
+    let day = 1
+    for (let w = 0; w < rows; w++) {
+      const row: (Date | null)[] = []
       for (let d = 0; d < 7; d++) {
-        row.push(addDays(weekStart, w * 7 + d))
+        const cellIndex = w * 7 + d
+        if (cellIndex < firstCellIndex || day > daysInMonth) {
+          row.push(null)
+        } else {
+          row.push(new Date(year, month, day))
+          day += 1
+        }
       }
       weeks.push(row)
     }
     return weeks
-  }, [weekStart])
+  }, [firstDay, today])
 
   if (loading) {
     return (
@@ -220,7 +259,7 @@ function HabitDetailPage() {
       </div>
 
       {editing ? (
-        <div className="glass-card habit-detail-card">
+        <div className="habit-detail-card">
           <div className="habit-detail-edit-header">
             <h2>Редактировать привычку</h2>
             <button
@@ -249,7 +288,7 @@ function HabitDetailPage() {
           />
         </div>
       ) : (
-        <div className={`glass-card habit-detail-card habit-detail-card--${habit.color || 'gold'}`}>
+        <div className={`habit-detail-card habit-detail-card--${habit.color || 'gold'}`}>
           <div className="habit-detail-title">
             <div className="habit-detail-title-text">
               <h1>{habit.name}</h1>
@@ -277,36 +316,55 @@ function HabitDetailPage() {
           </div>
 
           <div className="habit-detail-calendar">
+            <div className="habit-calendar-month-label">{monthLabel}</div>
             <div className="habit-calendar-header">
               {dayLabels.map((l, i) => (
                 <span key={i} className="habit-calendar-day-label">{l}</span>
               ))}
             </div>
-            {gridWeeks.map((week, wi) => (
-              <div key={wi} className="habit-calendar-week">
-                {week.map((cellDate, di) => {
-                  const dateStr = formatDateKey(cellDate)
-                  const completed = completedSet.has(dateStr)
-                  const weekdayNum = (cellDate.getDay() + 6) % 7 + 1
-                  const inSchedule = !habit.days_of_week?.length || habit.days_of_week.includes(weekdayNum)
-                  const notInSchedule = habit.days_of_week?.length && !inSchedule
-                  const weekCompletions = week.filter((d) => completedSet.has(formatDateKey(d))).length
-                  const weeklyGoalReached =
-                    habit.weekly_goal_days != null && weekCompletions >= habit.weekly_goal_days
-                  const disabledStyle =
-                    (notInSchedule && !completed) || (weeklyGoalReached && !completed)
-                  return (
-                    <button
-                      key={di}
-                      type="button"
-                      className={`habit-calendar-cell ${completed ? 'completed' : ''} ${disabledStyle ? 'disabled' : ''}`}
-                      title={formatDateLabel(dateStr)}
-                      onClick={() => setPopupDate(dateStr)}
-                    />
-                  )
-                })}
-              </div>
-            ))}
+            {monthWeeks.map((week, wi) => {
+              // для расчёта выполнения по неделям (режим N из 7)
+              const weekDates = week
+                .filter((d): d is Date => d != null)
+                .map((d) => formatDateKey(d))
+              const weekCompletions = weekDates.filter((d) => completedSet.has(d)).length
+
+              return (
+                <div key={wi} className="habit-calendar-week">
+                  {week.map((cellDate, di) => {
+                    if (!cellDate) {
+                      return <div key={di} className="habit-calendar-cell habit-calendar-cell--empty" />
+                    }
+
+                    const dateStr = formatDateKey(cellDate)
+                    const completed = completedSet.has(dateStr)
+                    const weekdayNum = (cellDate.getDay() + 6) % 7 + 1
+                    const inSchedule = !habit.days_of_week?.length || habit.days_of_week.includes(weekdayNum)
+                    const notInSchedule = habit.days_of_week?.length && !inSchedule
+                    const weeklyGoalReached =
+                      habit.weekly_goal_days != null && weekCompletions >= habit.weekly_goal_days
+                    const disabledStyle =
+                      (notInSchedule && !completed) || (weeklyGoalReached && !completed)
+
+                    const isToday = dateStr === formatDateKey(new Date())
+                    const dayNumber = cellDate.getDate()
+
+                    return (
+                      <button
+                        key={di}
+                        type="button"
+                        className={`habit-calendar-cell ${completed ? 'completed' : ''} ${disabledStyle ? 'disabled' : ''}`}
+                        title={formatDateLabel(dateStr)}
+                        onClick={() => setPopupDate(dateStr)}
+                      >
+                        <span className="habit-calendar-day-number">{dayNumber}</span>
+                        {isToday && <span className="habit-calendar-today-dot" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })}
           </div>
 
           {stats && (

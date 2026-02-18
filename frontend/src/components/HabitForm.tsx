@@ -72,7 +72,7 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
 
   return (
     <form
-      className={`habit-form glass-card habit-form--${color}`}
+      className={`habit-form habit-form--${color}`}
       onSubmit={handleSubmit}
     >
       <div className="form-group">

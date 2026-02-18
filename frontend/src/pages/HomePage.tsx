@@ -57,27 +57,44 @@ function HomePage() {
         <span className="home-date-full">{dateLabel.full}</span>
       </div>
 
-      <section className="home-hero">
-        <h1 className="home-title">Начните свой путь.</h1>
-        <p className="home-subtitle">
-          Создайте привычку и отмечайте прогресс каждый день.
-        </p>
+      {!hasHabits && (
+        <section className="home-hero">
+          <h1 className="home-title">Создайте свою первую привычку</h1>
+          <p className="home-subtitle">
+            Добавьте то, что хотите делать регулярно, и начинайте отмечать прогресс.
+          </p>
 
-        <button
-          className="home-add-button"
-          onClick={() => navigate('/habits?new=true')}
-          aria-label="Создать привычку"
-        >
-          <span className="home-add-button-inner">+</span>
-        </button>
-      </section>
+          <button
+            className="home-add-button"
+            onClick={() => navigate('/habits?new=true')}
+          >
+            Добавить привычку
+          </button>
+        </section>
+      )}
 
       {hasHabits && (
         <section className="home-section">
-          <h2 className="home-section-title">Мои привычки</h2>
+          <div className="home-section-header">
+            <h2 className="home-section-title">Мои привычки</h2>
+            <button
+              type="button"
+              className="home-section-add"
+              onClick={() => navigate('/habits?new=true')}
+              aria-label="Добавить привычку"
+            >
+              +
+            </button>
+          </div>
           <div className="home-habits-list">
             {habits.map((habit) => (
-              <HabitCard key={habit.id} habit={habit} />
+              <HabitCard
+                key={habit.id}
+                habit={habit}
+                onQuickToggle={(updated) =>
+                  setHabits((prev) => prev.map((h) => (h.id === updated.id ? updated : h)))
+                }
+              />
             ))}
           </div>
         </section>

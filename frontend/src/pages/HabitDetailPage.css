@@ -220,6 +220,13 @@
   margin-bottom: 24px;
 }
 
+.habit-calendar-month-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
 .habit-calendar-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -247,6 +254,31 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   transition: opacity 0.2s, background 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.habit-calendar-cell--empty {
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.habit-calendar-day-number {
+  line-height: 1.2;
+}
+
+.habit-calendar-today-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  margin-top: 2px;
 }
 
 .habit-calendar-cell.completed {
