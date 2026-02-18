@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { friendsApi } from '../services/api'
 import type { Friendship } from '../types'
-import QRCode from 'qrcode'
+import * as QRCode from 'qrcode'
 import './FriendsPage.css'
 import './FeedPage.css'
 
