@@ -35,6 +35,10 @@ export function addDays(d: Date, n: number): Date {
   return r
 }
 
+/** YYYY-MM-DD по локальной дате (не UTC), чтобы вечером не «перескакивало» на следующий день. */
 export function formatDateKey(d: Date): string {
-  return d.toISOString().slice(0, 10)
+  const y = d.getFullYear()
+  const m = d.getMonth() + 1
+  const day = d.getDate()
+  return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }

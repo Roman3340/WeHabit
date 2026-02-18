@@ -77,12 +77,14 @@
   color: var(--text-muted);
 }
 
-/* Ярче для цветов с тёмным акцентом */
+/* Яркое состояние «выполнено» для каждого цвета (в т.ч. золото по умолчанию) */
+.habit-card--gold .habit-day-square.completed,
+.habit-card .habit-day-square.completed { background: rgba(212, 175, 55, 0.9); box-shadow: 0 0 10px rgba(212, 175, 55, 0.6); }
+.habit-card--gray .habit-day-square.completed { background: rgba(161, 157, 152, 0.9); box-shadow: 0 0 10px rgba(120, 113, 108, 0.55); }
+.habit-card--silver .habit-day-square.completed { background: rgba(220, 220, 220, 0.95); box-shadow: 0 0 10px rgba(192, 192, 192, 0.6); }
 .habit-card--emerald .habit-day-square.completed { background: rgba(64, 145, 108, 0.9); box-shadow: 0 0 10px rgba(45, 106, 79, 0.6); }
-.habit-card--sapphire .habit-day-square.completed { background: rgba(71, 128, 255, 0.85); box-shadow: 0 0 10px rgba(41, 98, 255, 0.6); }
+.habit-card--sapphire .habit-day-square.completed { background: rgba(71, 128, 255, 0.9); box-shadow: 0 0 10px rgba(41, 98, 255, 0.6); }
 .habit-card--ruby .habit-day-square.completed { background: rgba(200, 60, 60, 0.9); box-shadow: 0 0 10px rgba(165, 42, 42, 0.6); }
-.habit-card--gray .habit-day-square.completed { background: rgba(161, 157, 152, 0.85); box-shadow: 0 0 10px rgba(120, 113, 108, 0.5); }
-.habit-card--silver .habit-day-square.completed { background: rgba(220, 220, 220, 0.9); box-shadow: 0 0 10px rgba(192, 192, 192, 0.6); }
 
 .participants-count {
   display: flex;
