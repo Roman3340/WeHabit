@@ -33,7 +33,7 @@ interface HabitFormProps {
 function HabitForm({ onSubmit, initialData }: HabitFormProps) {
   const [name, setName] = useState(initialData?.name || '')
   const [description, setDescription] = useState(initialData?.description || '')
-  const [frequency, setFrequency] = useState(initialData?.frequency || 'daily')
+  const [frequency] = useState(initialData?.frequency || 'daily')
   const [is_shared, setShared] = useState(initialData?.is_shared ?? false)
   const [color, setColor] = useState<HabitColor>(initialData?.color || 'gold')
   const [useWeeklyGoal, setUseWeeklyGoal] = useState(!!initialData?.weekly_goal_days)

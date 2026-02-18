@@ -24,11 +24,15 @@ function FriendsPage() {
   }, [])
 
   const inviteLink = typeof window !== 'undefined' ? window.location.origin + (import.meta.env.BASE_URL || '') : ''
-  const handleInviteClick = () => {
-    if (navigator.clipboard?.writeText(inviteLink)) {
-      navigator.clipboard.writeText(inviteLink)
+  const handleInviteClick = async () => {
+    if (!navigator.clipboard) {
+      alert('Отправьте другу ссылку: ' + inviteLink)
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(inviteLink)
       alert('Ссылка скопирована — отправьте её другу.')
-    } else {
+    } catch {
       alert('Отправьте другу ссылку: ' + inviteLink)
     }
   }
