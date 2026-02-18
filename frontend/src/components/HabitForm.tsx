@@ -28,9 +28,10 @@ export interface HabitFormData {
 interface HabitFormProps {
   onSubmit: (data: HabitFormData) => void
   initialData?: Partial<HabitFormData>
+  submitLabel?: string
 }
 
-function HabitForm({ onSubmit, initialData }: HabitFormProps) {
+function HabitForm({ onSubmit, initialData, submitLabel = 'Создать привычку' }: HabitFormProps) {
   const [name, setName] = useState(initialData?.name || '')
   const [description, setDescription] = useState(initialData?.description || '')
   const [frequency] = useState(initialData?.frequency || 'daily')
@@ -200,7 +201,7 @@ function HabitForm({ onSubmit, initialData }: HabitFormProps) {
       )}
 
       <button type="submit" className="btn">
-        Создать привычку
+        {submitLabel}
       </button>
     </form>
   )

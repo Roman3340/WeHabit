@@ -4,7 +4,17 @@ import { habitsApi, statsApi, profileApi } from '../services/api'
 import type { Habit, HabitStats } from '../types'
 import { getWeekStart, addDays, getDayLabels, formatDateKey } from '../utils/week'
 import type { FirstDayOfWeek } from '../utils/week'
+import HabitForm, { type HabitFormData } from '../components/HabitForm'
 import './HabitDetailPage.css'
+
+function SettingsIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24" />
+    </svg>
+  )
+}
 
 const WEEKDAY_NAMES = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
 
@@ -27,6 +37,8 @@ function HabitDetailPage() {
   const [deleting, setDeleting] = useState(false)
   const [popupDate, setPopupDate] = useState<string | null>(null)
   const [popupLoading, setPopupLoading] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -136,6 +148,23 @@ function HabitDetailPage() {
     }
   }
 
+  const handleEdit = async (formData: HabitFormData) => {
+    if (!id) return
+    setSaving(true)
+    try {
+      await habitsApi.update(id, formData)
+      await loadHabit()
+      await loadStats()
+      setEditing(false)
+      alert('Привычка обновлена!')
+    } catch (error) {
+      console.error('Failed to update habit:', error)
+      alert('Ошибка при обновлении привычки')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const scheduleLabel = useMemo(() => {
     if (!habit) return ''
     if (habit.weekly_goal_days != null) return `${habit.weekly_goal_days} из 7 дней`
@@ -190,11 +219,137 @@ function HabitDetailPage() {
         </button>
       </div>
 
-      <div className={`glass-card habit-detail-card habit-detail-card--${habit.color || 'gold'}`}>
-        <div className="habit-detail-title">
-          <h1>{habit.name}</h1>
-          {habit.is_shared && <span className="shared-badge">👥 Совместная</span>}
+      {editing ? (
+        <div className="glass-card habit-detail-card">
+          <div className="habit-detail-edit-header">
+            <h2>Редактировать привычку</h2>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setEditing(false)}
+              disabled={saving}
+            >
+              Отмена
+            </button>
+          </div>
+          <HabitForm
+            onSubmit={handleEdit}
+            submitLabel="Сохранить изменения"
+            initialData={{
+              name: habit.name,
+              description: habit.description,
+              frequency: habit.frequency,
+              is_shared: habit.is_shared,
+              color: habit.color || 'gold',
+              days_of_week: habit.days_of_week,
+              weekly_goal_days: habit.weekly_goal_days,
+              reminder_enabled: habit.reminder_enabled,
+              reminder_time: habit.reminder_time,
+            }}
+          />
         </div>
+      ) : (
+        <div className={`glass-card habit-detail-card habit-detail-card--${habit.color || 'gold'}`}>
+          <div className="habit-detail-title">
+            <div className="habit-detail-title-left">
+              <button
+                type="button"
+                className="habit-detail-edit-icon"
+                onClick={() => setEditing(true)}
+                title="Редактировать привычку"
+              >
+                <SettingsIcon />
+              </button>
+              <h1>{habit.name}</h1>
+            </div>
+            {habit.is_shared && <span className="shared-badge">👥 Совместная</span>}
+          </div>
+
+          {habit.description && (
+            <p className="habit-detail-description">{habit.description}</p>
+          )}
+
+          <div className="habit-detail-info">
+            <div className="info-item">
+              <span className="info-label">Расписание:</span>
+              <span className="info-value">{scheduleLabel}</span>
+            </div>
+          </div>
+
+          <div className="habit-detail-calendar">
+            <div className="habit-calendar-header">
+              {dayLabels.map((l, i) => (
+                <span key={i} className="habit-calendar-day-label">{l}</span>
+              ))}
+            </div>
+            {gridWeeks.map((week, wi) => (
+              <div key={wi} className="habit-calendar-week">
+                {week.map((cellDate, di) => {
+                  const dateStr = formatDateKey(cellDate)
+                  const completed = completedSet.has(dateStr)
+                  const weekdayNum = (cellDate.getDay() + 6) % 7 + 1
+                  const inSchedule = !habit.days_of_week?.length || habit.days_of_week.includes(weekdayNum)
+                  const notInSchedule = habit.days_of_week?.length && !inSchedule
+                  const weekCompletions = week.filter((d) => completedSet.has(formatDateKey(d))).length
+                  const weeklyGoalReached =
+                    habit.weekly_goal_days != null && weekCompletions >= habit.weekly_goal_days
+                  const disabledStyle =
+                    (notInSchedule && !completed) || (weeklyGoalReached && !completed)
+                  return (
+                    <button
+                      key={di}
+                      type="button"
+                      className={`habit-calendar-cell ${completed ? 'completed' : ''} ${disabledStyle ? 'disabled' : ''}`}
+                      title={formatDateLabel(dateStr)}
+                      onClick={() => setPopupDate(dateStr)}
+                    />
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+
+          {stats && (
+            <div className="habit-stats">
+              <h3>Статистика</h3>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <div className="stat-value">{stats.current_streak}</div>
+                  <div className="stat-label">Дней подряд</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-value">{stats.total_completions}</div>
+                  <div className="stat-label">Всего выполнено</div>
+                </div>
+                {(stats.above_norm_count ?? 0) > 0 && (
+                  <div className="stat-item stat-item--extra">
+                    <div className="stat-value">{stats.above_norm_count}</div>
+                    <div className="stat-label">Сверх нормы</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="habit-detail-actions">
+            <button
+              className="btn btn-success"
+              onClick={handleComplete}
+              disabled={completing}
+            >
+              {completing ? 'Отмечаю...' : '✓ Отметить выполнение'}
+            </button>
+            <button
+              type="button"
+              className="habit-detail-delete-link"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? '…' : '× Удалить привычку'}
+            </button>
+          </div>
+        </div>
+      )}
 
         {habit.description && (
           <p className="habit-detail-description">{habit.description}</p>
@@ -262,22 +417,25 @@ function HabitDetailPage() {
           </div>
         )}
 
-        <button
-          className="btn btn-success"
-          onClick={handleComplete}
-          disabled={completing}
-        >
-          {completing ? 'Отмечаю...' : '✓ Отметить выполнение'}
-        </button>
-        <button
-          type="button"
-          className="habit-detail-delete-link"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? '…' : '× Удалить привычку'}
-        </button>
-      </div>
+          <div className="habit-detail-actions">
+            <button
+              className="btn btn-success"
+              onClick={handleComplete}
+              disabled={completing}
+            >
+              {completing ? 'Отмечаю...' : '✓ Отметить выполнение'}
+            </button>
+            <button
+              type="button"
+              className="habit-detail-delete-link"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? '…' : '× Удалить привычку'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {popupDate && (
         <div className="habit-cell-popup-overlay" onClick={() => setPopupDate(null)}>

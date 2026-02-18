@@ -52,21 +52,20 @@ async def get_habit_stats(
         func.date(HabitLog.completed_at) >= start_date
     ).group_by(func.date(HabitLog.completed_at)).all()
     
-    # Текущая серия (дней подряд)
-    current_streak = 0
-    check_date = date.today()
-    while True:
-        log = db.query(HabitLog).filter(
-            HabitLog.habit_id == habit_id,
-            HabitLog.user_id == current_user.id,
-            func.date(HabitLog.completed_at) == check_date
-        ).first()
-        
-        if log:
-            current_streak += 1
-            check_date -= timedelta(days=1)
-        else:
-            break
+    # Максимальная серия дней подряд в периоде
+    completion_dates = sorted([dc.date for dc in daily_completions])
+    max_streak = 0
+    if completion_dates:
+        current_streak = 1
+        max_streak = 1
+        for i in range(1, len(completion_dates)):
+            days_diff = (completion_dates[i] - completion_dates[i-1]).days
+            if days_diff == 1:
+                current_streak += 1
+                max_streak = max(max_streak, current_streak)
+            else:
+                current_streak = 1
+    current_streak = max_streak
 
     # Сверх нормы: выполнение в день, не входящий в расписание (или сверх цели по неделе)
     # Единая нумерация: 1=Пн, 2=Вт, ..., 7=Вс (как во фронте)

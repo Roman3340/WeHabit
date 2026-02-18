@@ -11,10 +11,17 @@
   margin-bottom: 16px;
 }
 
+.habit-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-items: stretch;
+  justify-content: center;
+}
+
 .habit-detail-delete-link {
   display: block;
   width: 100%;
-  margin-top: var(--space-md);
   padding: 10px 0;
   background: none;
   border: none;
@@ -63,6 +70,52 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
+}
+
+.habit-detail-title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.habit-detail-edit-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.habit-detail-edit-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.habit-detail-edit-icon:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--accent);
+}
+
+.habit-detail-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+}
+
+.habit-detail-edit-header h2 {
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .habit-detail-title h1 {
