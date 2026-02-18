@@ -70,17 +70,19 @@ async def get_habit_stats(
 
     # Сверх нормы: выполнение в день, не входящий в расписание (или сверх цели по неделе)
     above_norm_count = 0
-    days_of_week = getattr(habit, "days_of_week", None)
+    raw_days = getattr(habit, "days_of_week", None) or []
+    days_of_week = set(int(x) for x in raw_days if x is not None)
     weekly_goal_days = getattr(habit, "weekly_goal_days", None)
 
-    if days_of_week and len(days_of_week) > 0:
+    if len(days_of_week) > 0:
+        # Режим "конкретные дни": сверх нормы = выполнение в день не из списка (1=Пн .. 7=Вс)
         for dc in daily_completions:
             d = dc.date
             weekday_iso = d.weekday() + 1  # Python: 0=Mon -> 1, 6=Sun -> 7
             if weekday_iso not in days_of_week:
                 above_norm_count += dc.count
     elif weekly_goal_days is not None and weekly_goal_days > 0:
-        week_start = start_date - timedelta(days=start_date.weekday())
+        # Режим "N из 7": на каждой неделе считаем лишние выполнения сверх N
         week_completions = {}
         for dc in daily_completions:
             d = dc.date

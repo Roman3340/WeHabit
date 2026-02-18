@@ -74,7 +74,8 @@ function HabitDetailPage() {
     if (!id) return
     setCompleting(true)
     try {
-      await habitsApi.complete(id)
+      const todayStr = formatDateKey(new Date())
+      await habitsApi.complete(id, { date: todayStr })
       await loadStats()
       alert('Привычка отмечена как выполненная! 🎉')
     } catch (error: any) {
@@ -187,14 +188,6 @@ function HabitDetailPage() {
         <button type="button" className="back-btn" onClick={() => navigate('/')}>
           ← Назад
         </button>
-        <button
-          type="button"
-          className="btn btn-danger habit-detail-delete"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? '…' : 'Удалить'}
-        </button>
       </div>
 
       <div className={`glass-card habit-detail-card habit-detail-card--${habit.color || 'gold'}`}>
@@ -225,11 +218,19 @@ function HabitDetailPage() {
               {week.map((cellDate, di) => {
                 const dateStr = formatDateKey(cellDate)
                 const completed = completedSet.has(dateStr)
+                const weekdayNum = (cellDate.getDay() + 6) % 7 + 1
+                const inSchedule = !habit.days_of_week?.length || habit.days_of_week.includes(weekdayNum)
+                const notInSchedule = habit.days_of_week?.length && !inSchedule
+                const weekCompletions = week.filter((d) => completedSet.has(formatDateKey(d))).length
+                const weeklyGoalReached =
+                  habit.weekly_goal_days != null && weekCompletions >= habit.weekly_goal_days
+                const disabledStyle =
+                  (notInSchedule && !completed) || (weeklyGoalReached && !completed)
                 return (
                   <button
                     key={di}
                     type="button"
-                    className={`habit-calendar-cell ${completed ? 'completed' : ''}`}
+                    className={`habit-calendar-cell ${completed ? 'completed' : ''} ${disabledStyle ? 'disabled' : ''}`}
                     title={formatDateLabel(dateStr)}
                     onClick={() => setPopupDate(dateStr)}
                   />
@@ -267,6 +268,14 @@ function HabitDetailPage() {
           disabled={completing}
         >
           {completing ? 'Отмечаю...' : '✓ Отметить выполнение'}
+        </button>
+        <button
+          type="button"
+          className="habit-detail-delete-link"
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? '…' : '× Удалить привычку'}
         </button>
       </div>
 

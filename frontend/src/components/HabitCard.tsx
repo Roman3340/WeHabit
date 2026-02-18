@@ -52,8 +52,7 @@ function HabitCard({ habit }: { habit: Habit }) {
           {habit.participants && habit.participants.length > 1 && (
             <span className="participants-count">{habit.participants.length} участников</span>
           )}
-          <div className="habit-days-row">
-            <span className="habit-days-label">дни недели</span>
+          <div className="habit-days-block">
             <div className="habit-days-squares">
               {DAY_LABELS.map((label, i) => {
                 const dateStr = weekDates[i]
@@ -67,6 +66,7 @@ function HabitCard({ habit }: { habit: Habit }) {
                 )
               })}
             </div>
+            <span className="habit-days-label">дни недели</span>
           </div>
         </div>
       </div>

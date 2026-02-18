@@ -11,9 +11,25 @@
   margin-bottom: 16px;
 }
 
-.habit-detail-delete {
-  padding: 8px 16px;
+.habit-detail-delete-link {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-md);
+  padding: 10px 0;
+  background: none;
+  border: none;
   font-size: 14px;
+  color: #8b2a2a;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.2s;
+}
+.habit-detail-delete-link:hover:not(:disabled) {
+  color: #a52a2a;
+}
+.habit-detail-delete-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .back-btn {
@@ -191,6 +207,21 @@
 
 .habit-calendar-cell:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+.habit-calendar-cell.disabled {
+  opacity: 0.4;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.habit-calendar-cell.disabled:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.habit-calendar-cell.disabled.completed {
+  opacity: 1;
+  background: var(--detail-accent, rgba(212, 175, 55, 0.4));
+  box-shadow: 0 0 8px var(--detail-bg, rgba(212, 175, 55, 0.2));
 }
 
 .habit-cell-popup-overlay {
