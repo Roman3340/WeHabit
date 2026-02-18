@@ -54,6 +54,13 @@ body {
   flex-direction: column;
 }
 
+/* При прокрутке к полю ввода оставляем отступ сверху и снизу */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea {
+  scroll-margin-top: 24px;
+  scroll-margin-bottom: 24px;
+}
+
 /* Премиум glass-карточки */
 .glass-card {
   position: relative;

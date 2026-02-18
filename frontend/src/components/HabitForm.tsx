@@ -83,6 +83,7 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Например: Утренняя прогулка"
+          enterKeyHint="done"
           required
         />
       </div>
@@ -163,6 +164,7 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Добавьте детали (необязательно)."
           rows={2}
+          enterKeyHint="done"
         />
       </div>
 
@@ -196,6 +198,7 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
             className="input habit-form-time-input"
             value={reminderTime}
             onChange={(e) => setReminderTime(e.target.value)}
+            enterKeyHint="done"
           />
         </div>
       )}

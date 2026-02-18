@@ -103,6 +103,7 @@ function ProfileEditPage() {
               value={formData.first_name}
               onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
               placeholder="Ваше имя"
+              enterKeyHint="done"
             />
           </div>
           <div className="form-group">
@@ -113,6 +114,7 @@ function ProfileEditPage() {
               value={formData.last_name}
               onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
               placeholder="Ваша фамилия"
+              enterKeyHint="done"
             />
           </div>
           <div className="form-group">
@@ -123,6 +125,7 @@ function ProfileEditPage() {
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
               placeholder="Расскажите о себе..."
               rows={4}
+              enterKeyHint="done"
             />
           </div>
           <div className="form-actions">

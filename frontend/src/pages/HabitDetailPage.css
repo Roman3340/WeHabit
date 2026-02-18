@@ -72,11 +72,17 @@
   margin-bottom: 16px;
 }
 
-.habit-detail-title-left {
+.habit-detail-title-text {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
+  min-width: 0;
+}
+
+.habit-detail-title-text h1 {
+  margin: 0;
 }
 
 .habit-detail-edit-icon {

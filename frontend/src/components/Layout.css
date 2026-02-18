@@ -5,6 +5,10 @@
   padding-bottom: var(--bottom-menu-height, 72px);
 }
 
+.layout.keyboard-open {
+  padding-bottom: 0;
+}
+
 .main-content {
   flex: 1;
   padding: 16px;

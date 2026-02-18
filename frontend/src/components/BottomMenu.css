@@ -17,6 +17,13 @@
   padding: 12px 0;
   box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.6);
   z-index: 1000;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.layout.keyboard-open .bottom-menu {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .menu-item {
