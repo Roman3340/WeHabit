@@ -114,8 +114,8 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
           <div className="habit-streak" title="Серия дней подряд">
             <span className="habit-streak-icon" aria-hidden="true">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2C12 2 8 6 8 10a4 4 0 0 0 8 0c0-4-4-8-4-8z" />
-                <path d="M8.5 13.5C8 14.3 8 16 10 17.5" />
+                <path d="M12 2c1.2 2.1 3.5 4 3.5 7 0 2.1-1.6 3.5-3.5 3.5S8.5 11.1 8.5 9c0-1.9 1-3.4 1.9-4.6" />
+                <path d="M12 22c4.1 0 7-3.1 7-7 0-2.5-1.2-4.6-3.1-6.1.1 2.6-1.6 4.1-3.9 4.1S8.1 11.5 8 8.9C6.2 10.4 5 12.5 5 15c0 3.9 2.9 7 7 7z" />
               </svg>
             </span>
             <span className="habit-streak-number">{streak}</span>

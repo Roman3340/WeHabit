@@ -2,12 +2,42 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
+import secrets
 from app.db.database import get_db
 from app.core.security import get_current_user
+from app.core.config import settings
 from app.models import User, Friendship
 from app.schemas.friendship import Friendship as FriendshipSchema, FriendshipCreate
 
 router = APIRouter()
+
+def ensure_referral_code(db: Session, user: User) -> str:
+    if getattr(user, "referral_code", None):
+        return user.referral_code
+
+    for _ in range(10):
+        code = secrets.token_hex(8)  # 16 символов 0-9a-f, безопасно для /start payload
+        exists = db.query(User).filter(User.referral_code == code).first()
+        if not exists:
+            user.referral_code = code
+            db.commit()
+            db.refresh(user)
+            return code
+
+    raise HTTPException(status_code=500, detail="Failed to generate referral code")
+
+
+@router.get("/invite")
+async def get_invite_link(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Получить реферальную ссылку для приглашения друга."""
+    code = ensure_referral_code(db, current_user)
+    if not settings.TELEGRAM_BOT_USERNAME:
+        raise HTTPException(status_code=500, detail="TELEGRAM_BOT_USERNAME is not configured")
+    url = f"https://t.me/{settings.TELEGRAM_BOT_USERNAME}?start={code}"
+    return {"referral_code": code, "referral_url": url}
 
 
 @router.get("", response_model=List[FriendshipSchema])
@@ -37,6 +67,8 @@ async def get_friends(
                 "id": friend.id,
                 "username": friend.username,
                 "first_name": friend.first_name,
+                "last_name": friend.last_name,
+                "bio": friend.bio,
                 "avatar_emoji": friend.avatar_emoji
             } if friend else None
         }

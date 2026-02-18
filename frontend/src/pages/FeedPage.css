@@ -112,3 +112,24 @@
 .feed-popup-copy {
   flex-shrink: 0;
 }
+
+.feed-popup-qr {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
+.feed-popup-qr-img {
+  width: 220px;
+  height: 220px;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  background: #f9fafb;
+}
+
+.feed-popup-qr-loading {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 16px 0;
+}

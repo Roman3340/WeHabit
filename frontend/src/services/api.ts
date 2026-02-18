@@ -98,6 +98,11 @@ export const friendsApi = {
     const response = await api.get('/friends')
     return response.data
   },
+
+  getInvite: async (): Promise<{ referral_code: string; referral_url: string }> => {
+    const response = await api.get('/friends/invite')
+    return response.data
+  },
   
   add: async (userId: string): Promise<void> => {
     await api.post(`/friends/${userId}`)

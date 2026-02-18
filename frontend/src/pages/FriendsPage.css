@@ -69,6 +69,15 @@
   align-items: center;
   gap: 16px;
   padding: 16px 18px;
+  border: none;
+  width: 100%;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+}
+
+.friend-card:hover {
+  background: rgba(212, 175, 55, 0.06);
 }
 
 .friend-avatar {

@@ -7,6 +7,7 @@ import ProfilePage from './pages/ProfilePage'
 import ProfileEditPage from './pages/ProfileEditPage'
 import HabitDetailPage from './pages/HabitDetailPage'
 import FriendsPage from './pages/FriendsPage'
+import FriendProfilePage from './pages/FriendProfilePage'
 import AchievementsPage from './pages/AchievementsPage'
 import NotificationsPage from './pages/NotificationsPage'
 import SettingsPage from './pages/SettingsPage'
@@ -23,6 +24,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/edit" element={<ProfileEditPage />} />
           <Route path="/profile/friends" element={<FriendsPage />} />
+          <Route path="/profile/friends/:id" element={<FriendProfilePage />} />
           <Route path="/profile/achievements" element={<AchievementsPage />} />
           <Route path="/profile/notifications" element={<NotificationsPage />} />
           <Route path="/profile/settings" element={<SettingsPage />} />

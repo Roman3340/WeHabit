@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
+import { friendsApi } from '../services/api'
 import './FeedPage.css'
 
 // Мокап событий ленты (позже с бэкенда)
@@ -9,8 +11,31 @@ const MOCK_FEED = [
 
 function FeedPage() {
   const [popupOpen, setPopupOpen] = useState(false)
+  const [inviteUrl, setInviteUrl] = useState<string>('')
+  const [qrUrl, setQrUrl] = useState<string>('')
+  const [inviteLoading, setInviteLoading] = useState(false)
 
-  const inviteLink = typeof window !== 'undefined' ? window.location.origin + (import.meta.env.BASE_URL || '') : 'https://t.me/your_bot/app'
+  useEffect(() => {
+    const loadInvite = async () => {
+      if (!popupOpen) return
+      setInviteLoading(true)
+      try {
+        const { referral_url } = await friendsApi.getInvite()
+        setInviteUrl(referral_url)
+        const dataUrl = await QRCode.toDataURL(referral_url, {
+          width: 220,
+          margin: 1,
+          color: { dark: '#111827', light: '#F9FAFB' },
+        })
+        setQrUrl(dataUrl)
+      } catch (e) {
+        console.error('Failed to load invite link', e)
+      } finally {
+        setInviteLoading(false)
+      }
+    }
+    loadInvite()
+  }, [popupOpen])
 
   return (
     <div className="feed-page">
@@ -51,17 +76,32 @@ function FeedPage() {
             <h3 className="feed-popup-title">Пригласить друга</h3>
             <p className="feed-popup-desc">Отправьте ссылку другу — он сможет открыть приложение и добавиться в друзья.</p>
             <div className="feed-popup-link-wrap">
-              <input readOnly value={inviteLink} className="input feed-popup-input" />
+              <input readOnly value={inviteUrl || '…'} className="input feed-popup-input" />
               <button
                 type="button"
                 className="btn feed-popup-copy"
-                onClick={() => {
-                  navigator.clipboard?.writeText(inviteLink)
-                  alert('Ссылка скопирована')
+                disabled={!inviteUrl}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard?.writeText(inviteUrl)
+                    alert('Ссылка скопирована')
+                  } catch {
+                    alert('Не удалось скопировать. Скопируйте ссылку вручную.')
+                  }
                 }}
               >
                 Копировать
               </button>
+            </div>
+
+            <div className="feed-popup-qr">
+              {inviteLoading ? (
+                <div className="feed-popup-qr-loading">Генерирую QR…</div>
+              ) : qrUrl ? (
+                <img className="feed-popup-qr-img" src={qrUrl} alt="QR-код приглашения" />
+              ) : (
+                <div className="feed-popup-qr-loading">QR недоступен</div>
+              )}
             </div>
             <button type="button" className="btn btn-secondary" onClick={() => setPopupOpen(false)}>
               Закрыть

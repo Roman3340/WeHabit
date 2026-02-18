@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_BOT_USERNAME: str = ""
+    TELEGRAM_MINIAPP_DEEPLINK: str = ""  # например: https://t.me/<bot_username>/<app_shortname>
     
     # CORS
     CORS_ORIGINS: List[str] = ["*"]
