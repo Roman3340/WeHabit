@@ -45,6 +45,8 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
     [habit.current_week_completions]
   )
 
+  const streak = habit.current_streak ?? 0
+
   const todayKey = formatDateKey(new Date())
   const completedToday = completionsSet.has(todayKey)
 
@@ -89,24 +91,28 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
           <p className="habit-description">{habit.description}</p>
         )}
         <div className="habit-footer">
-          {habit.participants && habit.participants.length > 1 && (
-            <span className="participants-count">{habit.participants.length} участников</span>
-          )}
-          <div className="habit-days-block">
-            <div className="habit-days-squares">
-              {DAY_LABELS.map((label, i) => {
-                const dateStr = weekDates[i]
-                const completed = completionsSet.has(dateStr)
-                return (
-                  <div
-                    key={i}
-                    className={`habit-day-square ${completed ? 'completed' : ''}`}
-                    title={label}
-                  />
-                )
-              })}
+          <div className="habit-footer-left">
+            <div className="habit-days-block">
+              <div className="habit-days-squares">
+                {DAY_LABELS.map((label, i) => {
+                  const dateStr = weekDates[i]
+                  const completed = completionsSet.has(dateStr)
+                  return (
+                    <div
+                      key={i}
+                      className={`habit-day-square ${completed ? 'completed' : ''}`}
+                      title={label}
+                    />
+                  )
+                })}
+              </div>
             </div>
-            <span className="habit-days-label">дни недели</span>
+            {habit.participants && habit.participants.length > 1 && (
+              <span className="participants-count">{habit.participants.length} участников</span>
+            )}
+          </div>
+          <div className="habit-streak-pill" title="Дней подряд">
+            <span className="habit-streak-number">{streak}</span>
           </div>
         </div>
       </div>

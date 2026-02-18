@@ -12,6 +12,7 @@ class Habit(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
     description = Column(Text)
+    emoji = Column(String(32))
     frequency = Column(String(50), nullable=False, default="daily")  # daily, weekly, custom
     is_shared = Column(Boolean, default=False)
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

@@ -7,6 +7,7 @@ from uuid import UUID
 class HabitBase(BaseModel):
     name: str
     description: Optional[str] = None
+    emoji: Optional[str] = None
     frequency: str = "daily"  # daily, weekly, custom
     is_shared: bool = False
     color: Optional[str] = "gold"
@@ -23,6 +24,7 @@ class HabitCreate(HabitBase):
 class HabitUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    emoji: Optional[str] = None
     frequency: Optional[str] = None
     is_shared: Optional[bool] = None
     color: Optional[str] = None

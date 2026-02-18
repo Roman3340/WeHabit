@@ -77,7 +77,7 @@ function ProfileEditPage() {
         <h1>Настройки профиля</h1>
       </div>
 
-      <div className="glass-card profile-edit-card">
+      <div className="profile-edit-card">
         <div className="profile-avatar-section">
           <div className="emoji-selector">
             <div className="emoji-grid">
@@ -102,6 +102,12 @@ function ProfileEditPage() {
               className="input"
               value={formData.first_name}
               onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  ;(e.currentTarget as HTMLElement).blur()
+                }
+              }}
               placeholder="Ваше имя"
               enterKeyHint="done"
             />
@@ -113,6 +119,12 @@ function ProfileEditPage() {
               className="input"
               value={formData.last_name}
               onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  ;(e.currentTarget as HTMLElement).blur()
+                }
+              }}
               placeholder="Ваша фамилия"
               enterKeyHint="done"
             />
@@ -123,6 +135,12 @@ function ProfileEditPage() {
               className="input textarea"
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  ;(e.currentTarget as HTMLElement).blur()
+                }
+              }}
               placeholder="Расскажите о себе..."
               rows={4}
               enterKeyHint="done"

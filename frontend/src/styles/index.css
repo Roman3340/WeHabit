@@ -165,7 +165,7 @@ textarea {
 .input {
   width: 100%;
   padding: 12px 16px;
-  border-radius: 999px;
+  border-radius: 18px;
   border: 1px solid rgba(212, 175, 55, 0.25);
   background: rgba(18, 16, 14, 0.9);
   font-size: 16px;
