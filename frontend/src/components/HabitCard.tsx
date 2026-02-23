@@ -189,7 +189,6 @@ function HabitCard({ habit, onQuickToggle, onRefreshHabits }: HabitCardProps) {
         )}
         <div className="habit-footer">
           <div className="habit-footer-left">
-            {habit.is_shared && <span className="shared-badge">👥 Совместная</span>}
             {!isInvitation && (
               <div className="habit-days-block">
                 <div className="habit-days-squares">
@@ -228,29 +227,29 @@ function HabitCard({ habit, onQuickToggle, onRefreshHabits }: HabitCardProps) {
               <span className="habit-streak-number">{streak}</span>
             </div>
           )}
-          {isInvitation && (
-            <div className="habit-invitation-actions">
-              <div className="habit-invitation-buttons">
-                <button
-                  type="button"
-                  className="btn btn-success habit-invite-accept"
-                  onClick={openAcceptModal}
-                  disabled={inviteLoading}
-                >
-                  Принять
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary habit-invite-decline"
-                  onClick={handleDeclineInvitation}
-                  disabled={inviteLoading}
-                >
-                  Отклонить
-                </button>
-              </div>
-            </div>
-          )}
         </div>
+        {isInvitation && (
+          <div className="habit-invitation-actions habit-invitation-actions--full">
+            <div className="habit-invitation-buttons">
+              <button
+                type="button"
+                className="btn btn-success habit-invite-accept"
+                onClick={openAcceptModal}
+                disabled={inviteLoading}
+              >
+                Принять
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary habit-invite-decline"
+                onClick={handleDeclineInvitation}
+                disabled={inviteLoading}
+              >
+                Отклонить
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       {showColorModal && (
         <div className="habit-cell-popup-overlay" onClick={() => setShowColorModal(false)}>

@@ -298,16 +298,26 @@ async def update_habit(
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if not habit:
         raise HTTPException(status_code=404, detail="Habit not found")
-    
+
     if habit.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Only creator can update habit")
-    
+
+    old_color = getattr(habit, "color", None)
     update_data = habit_data.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(habit, field, value)
 
     db.commit()
     db.refresh(habit)
+
+    new_color = getattr(habit, "color", None)
+    if "color" in update_data and new_color and new_color != old_color:
+        db.query(HabitParticipant).filter(
+            HabitParticipant.habit_id == habit_id,
+            HabitParticipant.user_id == current_user.id,
+        ).update({"color": new_color})
+        db.commit()
+
     return await get_habit(habit_id, current_user, db)
 
 

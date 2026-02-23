@@ -223,3 +223,13 @@
   min-width: 84px;
 }
 
+.habit-invitation-actions--full {
+  margin-top: 12px;
+  align-items: stretch;
+}
+
+.habit-invitation-actions--full .habit-invitation-buttons {
+  width: 100%;
+  justify-content: space-between;
+}
+
