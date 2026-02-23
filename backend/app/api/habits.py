@@ -503,7 +503,13 @@ async def complete_habit(
     db.add(log)
     db.commit()
     db.refresh(log)
-    # feed: completed -> for other accepted participants and creator (except actor)
+    # feed: completed -> for actor, other accepted participants и создателя
+    db.add(FeedEvent(
+        user_id=current_user.id,
+        actor_id=current_user.id,
+        habit_id=habit_id,
+        event_type="completed",
+    ))
     if habit.is_shared:
         accepted = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit_id,
@@ -525,7 +531,7 @@ async def complete_habit(
                 habit_id=habit_id,
                 event_type="completed",
             ))
-        db.commit()
+    db.commit()
 
     # Achievements: total_days (7,14,21)
     total_days = db.query(func.count(func.distinct(func.date(HabitLog.completed_at)))).filter(
@@ -656,6 +662,13 @@ async def remove_participant(
         HabitLog.user_id == user_id,
     ).delete()
     db.delete(participant)
+    db.commit()
+    db.add(FeedEvent(
+        user_id=user_id,
+        actor_id=current_user.id,
+        habit_id=habit_id,
+        event_type="removed",
+    ))
     db.commit()
     return await get_habit(habit_id, current_user, db)
 

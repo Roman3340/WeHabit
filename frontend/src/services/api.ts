@@ -152,6 +152,7 @@ export const feedApi = {
     created_at: string
     habit?: { id: string; name: string } | null
     actor?: { id: string; username?: string; first_name?: string; last_name?: string; avatar_emoji: string } | null
+    achievement?: { type: string; tier: number } | null
   }>> => {
     const response = await api.get('/feed')
     return response.data

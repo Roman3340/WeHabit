@@ -7,7 +7,7 @@ import './ProfilePage.css'
 
 const MENU_ITEMS = [
   { path: '/profile/achievements', label: 'Достижения', icon: <TrophyIcon width={22} height={22} /> },
-  { path: '/profile/friends', label: 'Друзья', icon: <FriendsIcon width={22} height={22} /> },
+  { path: '/profile/friends', label: 'Друзья', icon: <FriendsIcon width={26} height={26} /> },
   { path: '/profile/notifications', label: 'Уведомления', icon: <BellIcon width={22} height={22} /> },
   { path: '/profile/settings', label: 'Настройки', icon: <SettingsIcon width={22} height={22} /> },
 ]

@@ -45,20 +45,45 @@
 }
 
 .ach-medal {
-  height: 72px;
+  height: 90px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   font-size: 26px;
   font-weight: 800;
-  text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.7);
   border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -6px 12px rgba(0,0,0,0.45),
+    0 8px 18px rgba(0,0,0,0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.ach-medal::before {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.34),
+    rgba(255,255,255,0.02) 45%,
+    rgba(0,0,0,0.5) 60%,
+    rgba(255,255,255,0.12)
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0.85;
+}
+
+.ach-medal > * {
+  position: relative;
 }
 
 .ach-medal.locked {
-  filter: grayscale(0.55) brightness(0.9);
+  filter: grayscale(0.55) brightness(0.85);
   opacity: 0.7;
 }
 
@@ -68,15 +93,75 @@
 }
 
 .ach-medal--bronze {
-  background: linear-gradient(135deg, #4b2f22, #2e1d16);
+  background: radial-gradient(circle at 20% 0%, #f4d2b3 0, #c47a3a 35%, #8a4621 70%, #3b2214 100%);
 }
 .ach-medal--gold {
-  background: linear-gradient(135deg, #4a3f28, #322a18);
+  background: radial-gradient(circle at 20% 0%, #fff9c7 0, #f4d35e 35%, #c29b28 70%, #4b3b18 100%);
 }
 .ach-medal--diamond {
-  background: linear-gradient(135deg, #123d4a, #0e2c36);
+  background:
+    radial-gradient(circle at 15% 0%, #e0f7ff 0, #b9ecff 20%, transparent 50%),
+    radial-gradient(circle at 85% 20%, #eaf5ff 0, #c3e4ff 24%, transparent 55%),
+    linear-gradient(135deg, #4fd1c5, #0f6ab4 45%, #111827 100%);
 }
 
 .ach-medal-num {
   color: #e6e6e6;
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.ach-medal-name-mini {
+  font-size: 10px;
+  color: rgba(241,245,249,0.88);
+  text-align: center;
+  padding: 0 4px;
+}
+
+.ach-medal-large {
+  height: 120px;
+  width: 100%;
+}
+
+.ach-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: var(--space-md);
+}
+
+.ach-modal {
+  max-width: 420px;
+  width: 100%;
+  padding: var(--space-lg);
+}
+
+.ach-modal-title {
+  margin: 0 0 12px 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.ach-modal-medal-wrap {
+  margin-bottom: 14px;
+}
+
+.ach-modal-description {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.ach-modal-date {
+  margin: 0 0 16px 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.ach-modal-close {
+  width: 100%;
 }

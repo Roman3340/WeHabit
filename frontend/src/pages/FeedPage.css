@@ -49,12 +49,28 @@
 }
 
 .feed-item {
-  padding: var(--space-md);
-  margin-bottom: var(--space-sm);
+  padding: 10px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: var(--space-sm);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.feed-item:first-child {
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.feed-item-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: radial-gradient(circle at 30% 20%, #fef3c7 0, #f59e0b 40%, #92400e 100%);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
 }
 
 .feed-item-text {
@@ -67,6 +83,44 @@
   color: var(--text-muted);
   font-size: 0.85rem;
   flex-shrink: 0;
+}
+
+.feed-group {
+  margin-bottom: var(--space-md);
+}
+
+.feed-group-date {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.feed-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: var(--space-md);
+}
+
+.feed-page-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.feed-page-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.feed-page-counter {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .feed-popup-overlay {

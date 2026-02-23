@@ -14,13 +14,18 @@ function FeedPage() {
     created_at: string
     habit?: { id: string; name: string } | null
     actor?: { id: string; username?: string; first_name?: string; last_name?: string; avatar_emoji: string } | null
+    achievement?: { type: string; tier: number } | null
   }>>([])
+  const [hasFriends, setHasFriends] = useState(false)
+  const [page, setPage] = useState(0)
+  const pageSize = 20
 
   useEffect(() => {
     const loadFeed = async () => {
       try {
         const data = await feedApi.getAll()
         setFeed(data)
+        setPage(0)
       } catch (e) {
         console.error('Failed to load feed', e)
       }
@@ -50,17 +55,32 @@ function FeedPage() {
     loadInvite()
   }, [popupOpen])
 
+  useEffect(() => {
+    const loadFriends = async () => {
+      try {
+        const data = await friendsApi.getAll()
+        setHasFriends(data.length > 0)
+      } catch (e) {
+        console.error('Failed to load friends', e)
+      }
+    }
+    loadFriends()
+  }, [])
+
   const grouped = useMemo(() => {
+    const sorted = [...feed].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+    const start = page * pageSize
+    const pageItems = sorted.slice(start, start + pageSize)
     const map: Record<string, typeof feed> = {}
-    feed.forEach((ev) => {
+    pageItems.forEach((ev) => {
       const d = new Date(ev.created_at)
       const key = d.toISOString().slice(0, 10)
       if (!map[key]) map[key] = []
       map[key].push(ev)
     })
     const entries = Object.entries(map).sort((a, b) => (a[0] < b[0] ? 1 : -1))
-    return entries
-  }, [feed])
+    return { entries, total: sorted.length }
+  }, [feed, page, pageSize])
 
   const formatDate = (dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number)
@@ -81,6 +101,19 @@ function FeedPage() {
         return `${name} вышел(ла) из вашей привычки ${habitName}`
       case 'completed':
         return `${name} выполнил(а) привычку ${habitName}`
+      case 'removed':
+        return `${name} удалил(а) вас из своей привычки ${habitName}`
+      case 'achievement': {
+        const a = ev.achievement
+        let achName = 'новое достижение'
+        if (a) {
+          if (a.type === 'total_days') achName = '«Выполняй привычку регулярно»'
+          if (a.type === 'friends_count') achName = '«Приглашай друзей»'
+          if (a.type === 'streak') achName = '«Держи серию в привычке»'
+          if (a.type === 'habit_invites') achName = '«Веди привычки с друзьями»'
+        }
+        return `${name} получил(а) достижение ${achName}`
+      }
       default:
         return `${name}: событие ${ev.event_type} ${habitName}`
     }
@@ -93,15 +126,17 @@ function FeedPage() {
         <p className="feed-page-subtitle">Прогресс и активность друзей</p>
       </header>
 
-      <section className="glass-card feed-invite-block">
-        <button
-          type="button"
-          className="btn feed-invite-btn"
-          onClick={() => setPopupOpen(true)}
-        >
-          Пригласить друга
-        </button>
-      </section>
+      {!hasFriends && (
+        <section className="glass-card feed-invite-block">
+          <button
+            type="button"
+            className="btn feed-invite-btn"
+            onClick={() => setPopupOpen(true)}
+          >
+            Пригласить друга
+          </button>
+        </section>
+      )}
 
       <section className="feed-activity">
         <h2 className="feed-activity-title">Активность</h2>
@@ -109,14 +144,14 @@ function FeedPage() {
           <p className="feed-empty">Пока нет событий. Добавьте друзей и ведите привычки вместе.</p>
         ) : (
           <div className="feed-list">
-            {grouped.map(([dateKey, events]) => (
+            {grouped.entries.map(([dateKey, events]) => (
               <div key={dateKey} className="feed-group">
                 <div className="feed-group-date">{formatDate(dateKey)}</div>
                 <ul>
                   {events
                     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
                     .map((ev) => (
-                      <li key={ev.id} className="glass-card feed-item">
+                      <li key={ev.id} className="feed-item">
                         <span className="feed-item-avatar">{ev.actor?.avatar_emoji || '👤'}</span>
                         <span className="feed-item-text">{formatEventText(ev)}</span>
                         <span className="feed-item-time">
@@ -127,6 +162,31 @@ function FeedPage() {
                 </ul>
               </div>
             ))}
+            {grouped.total > pageSize && (
+              <div className="feed-pagination">
+                <button
+                  type="button"
+                  className="feed-page-btn"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  ← Новые
+                </button>
+                <span className="feed-page-counter">
+                  {page + 1} / {Math.ceil(grouped.total / pageSize)}
+                </span>
+                <button
+                  type="button"
+                  className="feed-page-btn"
+                  disabled={(page + 1) * pageSize >= grouped.total}
+                  onClick={() =>
+                    setPage((p) => ((p + 1) * pageSize >= grouped.total ? p : p + 1))
+                  }
+                >
+                  Ранее →
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>

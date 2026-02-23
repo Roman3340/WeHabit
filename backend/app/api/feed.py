@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.db.database import get_db
 from app.core.security import get_current_user
-from app.models import User, Habit, FeedEvent
+from app.models import User, Habit, FeedEvent, UserAchievement
 
 router = APIRouter()
 
@@ -23,6 +23,17 @@ async def get_feed(
     for ev in events:
         actor = db.query(User).filter(User.id == ev.actor_id).first() if ev.actor_id else None
         habit = db.query(Habit).filter(Habit.id == ev.habit_id).first() if ev.habit_id else None
+        achievement = None
+        if ev.event_type == "achievement" and ev.actor_id:
+            ach = db.query(UserAchievement).filter(
+                UserAchievement.user_id == ev.actor_id
+            ).order_by(desc(UserAchievement.created_at)).first()
+            if ach:
+                achievement = {
+                    "type": ach.type,
+                    "tier": ach.tier,
+                    "created_at": ach.created_at,
+                }
         result.append({
             "id": ev.id,
             "event_type": ev.event_type,
@@ -38,5 +49,6 @@ async def get_feed(
                 "last_name": actor.last_name,
                 "avatar_emoji": actor.avatar_emoji,
             } if actor else None,
+            "achievement": achievement,
         })
     return result
