@@ -246,3 +246,62 @@
   min-height: 80px;
   border-radius: 16px;
 }
+
+.habit-form-friends-loading,
+.habit-form-friends-error,
+.habit-form-friends-empty {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.habit-form-friends-error {
+  color: #f87171;
+}
+
+.habit-form-friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.habit-form-friend-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+
+.habit-form-friend-btn.selected {
+  background: rgba(212, 175, 55, 0.16);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.habit-form-friend-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 18px;
+}
+
+.habit-form-friend-name {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

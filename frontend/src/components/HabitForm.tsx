@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import type { HabitColor } from '../types'
+import { useEffect, useState } from 'react'
+import type { HabitColor, Friendship } from '../types'
+import { friendsApi } from '../services/api'
 import './HabitForm.css'
 
 const DAY_LABELS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
@@ -44,6 +45,10 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
   )
   const [reminderEnabled, setReminderEnabled] = useState(initialData?.reminder_enabled ?? false)
   const [reminderTime, setReminderTime] = useState(initialData?.reminder_time || '09:00')
+  const [friends, setFriends] = useState<Friendship[]>([])
+  const [friendsLoading, setFriendsLoading] = useState(false)
+  const [friendsError, setFriendsError] = useState<string | null>(null)
+  const [selectedFriendIds, setSelectedFriendIds] = useState<string[]>(initialData?.participant_ids || [])
 
   const handleEnterAsDone = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
@@ -56,6 +61,42 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
     setDaysOfWeek((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort((a, b) => a - b)
     )
+  }
+
+  useEffect(() => {
+    if (!is_shared) {
+      return
+    }
+    if (friends.length > 0 || friendsLoading) {
+      return
+    }
+    const loadFriends = async () => {
+      setFriendsLoading(true)
+      setFriendsError(null)
+      try {
+        const data = await friendsApi.getAll()
+        setFriends(data)
+      } catch (error) {
+        console.error('Failed to load friends for shared habit', error)
+        setFriendsError('Не удалось загрузить список друзей')
+      } finally {
+        setFriendsLoading(false)
+      }
+    }
+    loadFriends()
+  }, [is_shared, friends.length, friendsLoading])
+
+  const toggleFriend = (friendId: string) => {
+    setSelectedFriendIds((prev) => {
+      if (prev.includes(friendId)) {
+        return prev.filter((id) => id !== friendId)
+      }
+      if (prev.length >= 5) {
+        alert('Максимум 6 участников в привычке: вы и до 5 друзей')
+        return prev
+      }
+      return [...prev, friendId]
+    })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,6 +115,7 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
       weekly_goal_days: useWeeklyGoal ? weeklyGoalDays : undefined,
       reminder_enabled: reminderEnabled,
       reminder_time: reminderEnabled ? reminderTime : undefined,
+      participant_ids: is_shared ? selectedFriendIds : undefined,
     })
   }
 
@@ -188,6 +230,44 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
           <span className="toggle-slider" />
         </label>
       </div>
+
+      {is_shared && (
+        <div className="form-group">
+          <div className="habit-form-section-title">Выберите друзей (до 6 человек вместе с вами)</div>
+          {friendsLoading && <div className="habit-form-friends-loading">Загрузка списка друзей…</div>}
+          {friendsError && !friendsLoading && (
+            <div className="habit-form-friends-error">{friendsError}</div>
+          )}
+          {!friendsLoading && !friendsError && friends.length === 0 && (
+            <div className="habit-form-friends-empty">
+              У вас пока нет друзей. Пригласите их через профиль, чтобы создать совместную привычку.
+            </div>
+          )}
+          {!friendsLoading && !friendsError && friends.length > 0 && (
+            <div className="habit-form-friends-list">
+              {friends.map((fr) => {
+                const friend = fr.friend
+                if (!friend) return null
+                const selected = selectedFriendIds.includes(friend.id)
+                const displayName =
+                  [friend.first_name, friend.last_name].filter(Boolean).join(' ') ||
+                  (friend.username ? '@' + friend.username : 'Друг')
+                return (
+                  <button
+                    key={friend.id}
+                    type="button"
+                    className={`habit-form-friend-btn ${selected ? 'selected' : ''}`}
+                    onClick={() => toggleFriend(friend.id)}
+                  >
+                    <span className="habit-form-friend-avatar">{friend.avatar_emoji}</span>
+                    <span className="habit-form-friend-name">{displayName}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="form-group habit-form-toggle-row">
         <span className="habit-form-toggle-label">Включить напоминание</span>

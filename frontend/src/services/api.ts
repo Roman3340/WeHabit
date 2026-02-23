@@ -90,6 +90,15 @@ export const habitsApi = {
   removeLog: async (id: string, dateStr: string): Promise<void> => {
     await api.delete(`/habits/${id}/logs/${dateStr}`)
   },
+
+  acceptInvitation: async (id: string, data?: { color?: string }): Promise<Habit> => {
+    const response = await api.post(`/habits/${id}/invitation/accept`, data || {})
+    return response.data
+  },
+
+  declineInvitation: async (id: string): Promise<void> => {
+    await api.post(`/habits/${id}/invitation/decline`)
+  },
 }
 
 // Friends

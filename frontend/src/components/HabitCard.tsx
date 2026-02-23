@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Habit, HabitColor } from '../types'
 import { habitsApi } from '../services/api'
@@ -32,12 +32,21 @@ function getCurrentWeekDates(): string[] {
 
 interface HabitCardProps {
   habit: Habit
-  onQuickToggle?: (updated: Habit) => void
+  onQuickToggle?: (updated: Habit | null) => void
 }
 
 function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
   const navigate = useNavigate()
-  const colorClass = habit.color && COLOR_CLASS[habit.color] ? COLOR_CLASS[habit.color] : 'habit-card--gold'
+  const isInvitation = habit.is_invited === true
+  const colorClass = isInvitation
+    ? 'habit-card--gold'
+    : habit.color && COLOR_CLASS[habit.color]
+      ? COLOR_CLASS[habit.color]
+      : 'habit-card--gold'
+
+  const ALL_COLORS: HabitColor[] = ['gray', 'silver', 'gold', 'emerald', 'sapphire', 'ruby']
+  const [inviteColor, setInviteColor] = useState<HabitColor | null>(null)
+  const [inviteLoading, setInviteLoading] = useState(false)
 
   const weekDates = useMemo(() => getCurrentWeekDates(), [])
   const completionsSet = useMemo(
@@ -50,8 +59,49 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
   const todayKey = formatDateKey(new Date())
   const completedToday = completionsSet.has(todayKey)
 
+  const getDayBackgroundStyle = (dateStr: string): React.CSSProperties | undefined => {
+    const entries = habit.weekly_participant_completions?.[dateStr] || []
+    if (!entries.length) {
+      return undefined
+    }
+    const colors = entries
+      .map((e) => e.color)
+      .filter((c): c is HabitColor => !!c && (ALL_COLORS as string[]).includes(c))
+    if (!colors.length) {
+      return undefined
+    }
+    const uniqueColors: HabitColor[] = []
+    colors.forEach((c) => {
+      if (!uniqueColors.includes(c)) {
+        uniqueColors.push(c)
+      }
+    })
+    const cssColor = (c: HabitColor) => {
+      if (c === 'gray') return '#a19d98'
+      if (c === 'silver') return '#c0c0c0'
+      if (c === 'gold') return '#d4af37'
+      if (c === 'emerald') return '#40916c'
+      if (c === 'sapphire') return '#4780ff'
+      if (c === 'ruby') return '#c83c3c'
+      return '#d4af37'
+    }
+    const count = uniqueColors.length
+    const step = 100 / count
+    const stops = uniqueColors.map((c, index) => {
+      const start = index * step
+      const end = (index + 1) * step
+      return `${cssColor(c)} ${start}% ${end}%`
+    })
+    return {
+      backgroundImage: `linear-gradient(135deg, ${stops.join(', ')})`,
+    }
+  }
+
   const handleQuickToggle = async (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (isInvitation) {
+      return
+    }
     try {
       if (completedToday) {
         await habitsApi.removeLog(habit.id, todayKey)
@@ -72,17 +122,54 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
     }
   }
 
+  const handleAcceptInvitation = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (inviteLoading) return
+    setInviteLoading(true)
+    try {
+      const payload = inviteColor ? { color: inviteColor } : undefined
+      const updated = await habitsApi.acceptInvitation(habit.id, payload as any)
+      if (onQuickToggle && updated) {
+        onQuickToggle(updated)
+      }
+    } catch (error) {
+      console.error('Failed to accept invitation', error)
+      alert('Не удалось принять приглашение')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  const handleDeclineInvitation = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (inviteLoading) return
+    setInviteLoading(true)
+    try {
+      await habitsApi.declineInvitation(habit.id)
+      if (onQuickToggle) {
+        onQuickToggle(null)
+      }
+    } catch (error) {
+      console.error('Failed to decline invitation', error)
+      alert('Не удалось отклонить приглашение')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
   return (
     <div className={`habit-card glass-card ${colorClass}`} onClick={() => navigate(`/habits/${habit.id}`)}>
       <div className="habit-card-inner">
-        <button
-          type="button"
-          className={`habit-quick-toggle ${completedToday ? 'completed' : ''}`}
-          onClick={handleQuickToggle}
-          aria-label={completedToday ? 'Снять отметку за сегодня' : 'Отметить сегодня выполненным'}
-        >
-          ✓
-        </button>
+        {!isInvitation && (
+          <button
+            type="button"
+            className={`habit-quick-toggle ${completedToday ? 'completed' : ''}`}
+            onClick={handleQuickToggle}
+            aria-label={completedToday ? 'Снять отметку за сегодня' : 'Отметить сегодня выполненным'}
+          >
+            ✓
+          </button>
+        )}
         <div className="habit-header">
           <h3 className="habit-name">{habit.name}</h3>
           {habit.is_shared && <span className="shared-badge">👥</span>}
@@ -92,34 +179,82 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
         )}
         <div className="habit-footer">
           <div className="habit-footer-left">
-            <div className="habit-days-block">
-              <div className="habit-days-squares">
-                {DAY_LABELS.map((label, i) => {
-                  const dateStr = weekDates[i]
-                  const completed = completionsSet.has(dateStr)
-                  return (
-                    <div
-                      key={i}
-                      className={`habit-day-square ${completed ? 'completed' : ''}`}
-                      title={label}
-                    />
-                  )
-                })}
+            {!isInvitation && (
+              <div className="habit-days-block">
+                <div className="habit-days-squares">
+                  {DAY_LABELS.map((label, i) => {
+                    const dateStr = weekDates[i]
+                    const hasAny = !!(habit.weekly_participant_completions?.[dateStr]?.length)
+                    const completed = hasAny
+                    const style = getDayBackgroundStyle(dateStr)
+                    return (
+                      <div
+                        key={i}
+                        className={`habit-day-square ${completed ? 'completed' : ''}`}
+                        title={label}
+                        style={style}
+                      />
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-            {habit.participants && habit.participants.length > 1 && (
+            )}
+            {habit.has_pending_invites && (
+              <span className="participants-count">Друг приглашен</span>
+            )}
+            {habit.participants && habit.participants.length > 1 && !habit.has_pending_invites && (
               <span className="participants-count">{habit.participants.length} участников</span>
             )}
           </div>
-          <div className="habit-streak" title="Серия дней подряд">
-            <span className="habit-streak-icon" aria-hidden="true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2c1.2 2.1 3.5 4 3.5 7 0 2.1-1.6 3.5-3.5 3.5S8.5 11.1 8.5 9c0-1.9 1-3.4 1.9-4.6" />
-                <path d="M12 22c4.1 0 7-3.1 7-7 0-2.5-1.2-4.6-3.1-6.1.1 2.6-1.6 4.1-3.9 4.1S8.1 11.5 8 8.9C6.2 10.4 5 12.5 5 15c0 3.9 2.9 7 7 7z" />
-              </svg>
-            </span>
-            <span className="habit-streak-number">{streak}</span>
-          </div>
+          {!isInvitation && (
+            <div className="habit-streak" title="Серия дней подряд">
+              <span className="habit-streak-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2c1.2 2.1 3.5 4 3.5 7 0 2.1-1.6 3.5-3.5 3.5S8.5 11.1 8.5 9c0-1.9 1-3.4 1.9-4.6" />
+                  <path d="M12 22c4.1 0 7-3.1 7-7 0-2.5-1.2-4.6-3.1-6.1.1 2.6-1.6 4.1-3.9 4.1S8.1 11.5 8 8.9C6.2 10.4 5 12.5 5 15c0 3.9 2.9 7 7 7z" />
+                </svg>
+              </span>
+              <span className="habit-streak-number">{streak}</span>
+            </div>
+          )}
+          {isInvitation && (
+            <div className="habit-invitation-actions">
+              <div className="habit-invitation-colors">
+                {ALL_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`habit-invite-color-btn habit-invite-color-btn--${c} ${
+                      inviteColor === c ? 'active' : ''
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setInviteColor(c)
+                    }}
+                    aria-label={c}
+                  />
+                ))}
+              </div>
+              <div className="habit-invitation-buttons">
+                <button
+                  type="button"
+                  className="btn btn-success habit-invite-accept"
+                  onClick={handleAcceptInvitation}
+                  disabled={inviteLoading}
+                >
+                  {inviteLoading ? '…' : 'Принять'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary habit-invite-decline"
+                  onClick={handleDeclineInvitation}
+                  disabled={inviteLoading}
+                >
+                  Отклонить
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

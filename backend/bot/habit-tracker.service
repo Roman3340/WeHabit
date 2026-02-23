@@ -1,0 +1,14 @@
+[Unit]
+Description=Habit Tracker API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/habits_tracker/backend
+Environment='PATH=/root/habits_tracker/backend/venv/bin'
+ExecStart=/root/habits_tracker/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8002
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

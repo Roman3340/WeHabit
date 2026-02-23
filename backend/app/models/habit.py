@@ -38,8 +38,9 @@ class HabitParticipant(Base):
     habit_id = Column(UUID(as_uuid=True), ForeignKey("habits.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    status = Column(String(20), default="accepted")
+    color = Column(String(20))
 
-    # Relationships
     habit = relationship("Habit", back_populates="participants")
     user = relationship("User")
 

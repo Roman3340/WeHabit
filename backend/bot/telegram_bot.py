@@ -3,7 +3,7 @@ from typing import Optional
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
@@ -21,7 +21,7 @@ def build_webapp_url(ref_code: Optional[str] = None) -> str:
     """
     base = settings.TELEGRAM_MINIAPP_DEEPLINK.strip()
     if not base:
-        return f"https://t.me/{settings.TELEGRAM_BOT_USERNAME or 'your_bot'}/your_app"
+        base = f"https://t.me/{settings.TELEGRAM_BOT_USERNAME or 'your_bot'}/your_app"
 
     if ref_code:
         sep = "&" if "?" in base else "?"
@@ -55,7 +55,7 @@ async def cmd_start(message: Message) -> None:
       kb.row(
           InlineKeyboardButton(
               text="Принять приглашение 🎯",
-              web_app=WebAppInfo(url=build_webapp_url(ref_code)),
+              url=build_webapp_url(ref_code),
           )
       )
       await message.answer(text, reply_markup=kb.as_markup())
@@ -71,7 +71,7 @@ async def cmd_start(message: Message) -> None:
   kb.row(
       InlineKeyboardButton(
           text="Открыть приложение",
-          web_app=WebAppInfo(url=build_webapp_url(None)),
+          url=build_webapp_url(None),
       )
   )
   await message.answer(text, reply_markup=kb.as_markup())

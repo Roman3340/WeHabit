@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional, List
-from datetime import datetime, time, date
+from typing import Optional, List, Dict, Any
+from datetime import datetime, time
 from uuid import UUID
 
 
@@ -40,6 +40,10 @@ class Habit(HabitBase):
     participants: Optional[List[dict]] = None
     current_week_completions: Optional[List[str]] = None  # даты YYYY-MM-DD за текущую неделю
     current_streak: Optional[int] = None  # максимальная серия дней подряд (для карточки)
+    has_pending_invites: Optional[bool] = None
+    is_invited: Optional[bool] = None
+    can_edit: Optional[bool] = None
+    weekly_participant_completions: Optional[Dict[str, List[Dict[str, Any]]]] = None
 
     class Config:
         from_attributes = True

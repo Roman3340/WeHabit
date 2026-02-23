@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/habit_tracker"
     
     # Telegram
-    TELEGRAM_BOT_TOKEN: str = ""
-    TELEGRAM_BOT_USERNAME: str = ""
-    TELEGRAM_MINIAPP_DEEPLINK: str = ""  # например: https://t.me/<bot_username>/<app_shortname>
+    TELEGRAM_BOT_TOKEN: str = "7758408519:AAFIxgU5jgyjaORfsUne9rpIdYaPyT6E69s"
+    TELEGRAM_BOT_USERNAME: str = "wehabit_bot"
+    TELEGRAM_MINIAPP_DEEPLINK: str = "https://t.me/wehabit_bot/friends"  # например: https://t.me/<bot_username>/<app_shortname>
     
     # CORS
     CORS_ORIGINS: List[str] = ["*"]

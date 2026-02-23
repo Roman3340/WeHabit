@@ -27,7 +27,8 @@ async def get_habit_stats(
     if habit.created_by != current_user.id:
         participant = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit_id,
-            HabitParticipant.user_id == current_user.id
+            HabitParticipant.user_id == current_user.id,
+            HabitParticipant.status == "accepted",
         ).first()
         if not participant:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -52,20 +53,80 @@ async def get_habit_stats(
         func.date(HabitLog.completed_at) >= start_date
     ).group_by(func.date(HabitLog.completed_at)).all()
     
-    # Максимальная серия дней подряд в периоде
+    # Максимальная серия дней подряд
+    # Для одиночных привычек считаем по пользователю, для совместных — по общим дням всех участников
     completion_dates = sorted([dc.date for dc in daily_completions])
-    max_streak = 0
+    user_max_streak = 0
     if completion_dates:
         current_streak = 1
-        max_streak = 1
+        user_max_streak = 1
         for i in range(1, len(completion_dates)):
-            days_diff = (completion_dates[i] - completion_dates[i-1]).days
+            days_diff = (completion_dates[i] - completion_dates[i - 1]).days
             if days_diff == 1:
                 current_streak += 1
-                max_streak = max(max_streak, current_streak)
+                user_max_streak = max(user_max_streak, current_streak)
             else:
                 current_streak = 1
-    current_streak = max_streak
+
+    accepted_participants = db.query(HabitParticipant).filter(
+        HabitParticipant.habit_id == habit_id,
+        HabitParticipant.status == "accepted",
+    ).all()
+
+    joint_max_streak = user_max_streak
+    participant_completions = []
+
+    if accepted_participants:
+        participant_ids = [p.user_id for p in accepted_participants]
+        participants_by_user = {p.user_id: p for p in accepted_participants}
+
+        rows = db.query(
+            func.date(HabitLog.completed_at).label("date"),
+            HabitLog.user_id,
+        ).filter(
+            HabitLog.habit_id == habit_id,
+            HabitLog.user_id.in_(participant_ids),
+            func.date(HabitLog.completed_at) >= start_date,
+        ).all()
+
+        for row in rows:
+            d = row.date
+            uid = row.user_id
+            participant = participants_by_user.get(uid)
+            participant_completions.append(
+                {
+                    "date": str(d),
+                    "user_id": uid,
+                    "color": getattr(participant, "color", None) if participant else None,
+                }
+            )
+
+        if len(participant_ids) > 1:
+            common_dates = None
+            for uid in participant_ids:
+                user_rows = [
+                    r.date
+                    for r in rows
+                    if r.user_id == uid
+                ]
+                date_set = set(user_rows)
+                if common_dates is None:
+                    common_dates = date_set
+                else:
+                    common_dates &= date_set
+            if common_dates:
+                ordered = sorted(common_dates)
+                cur = 1
+                joint_max_streak = 1
+                for i in range(1, len(ordered)):
+                    if (ordered[i] - ordered[i - 1]).days == 1:
+                        cur += 1
+                        if cur > joint_max_streak:
+                            joint_max_streak = cur
+                    else:
+                        cur = 1
+
+    current_streak = joint_max_streak
 
     # Сверх нормы: выполнение в день, не входящий в расписание (или сверх цели по неделе)
     # Единая нумерация: 1=Пн, 2=Вт, ..., 7=Вс (как во фронте)
@@ -101,6 +162,7 @@ async def get_habit_stats(
         "daily_completions": [
             {"date": str(dc.date), "count": dc.count} for dc in daily_completions
         ],
+        "participant_completions": participant_completions,
         "period_days": days
     }
 

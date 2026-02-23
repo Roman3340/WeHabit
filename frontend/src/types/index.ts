@@ -31,11 +31,23 @@ export interface Habit {
   participants?: Array<{
     id: string
     joined_at: string
+    status?: string
+    color?: HabitColor
   }>
   /** Даты выполнений за текущую неделю (YYYY-MM-DD) */
   current_week_completions?: string[]
   /** Максимальная серия дней подряд (как в статистике; для карточки) */
   current_streak?: number
+  has_pending_invites?: boolean
+  is_invited?: boolean
+  can_edit?: boolean
+  weekly_participant_completions?: Record<
+    string,
+    {
+      user_id: string
+      color?: HabitColor
+    }[]
+  >
 }
 
 export interface HabitLog {
@@ -72,6 +84,11 @@ export interface HabitStats {
   daily_completions: Array<{
     date: string
     count: number
+  }>
+  participant_completions?: Array<{
+    date: string
+    user_id: string
+    color?: HabitColor
   }>
   period_days: number
 }

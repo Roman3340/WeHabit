@@ -180,3 +180,46 @@
   flex-shrink: 0;
 }
 
+.habit-invitation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.habit-invitation-colors {
+  display: flex;
+  gap: 6px;
+}
+
+.habit-invite-color-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  padding: 0;
+}
+
+.habit-invite-color-btn.active {
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+}
+
+.habit-invite-color-btn--gray { background: rgba(161, 157, 152, 0.9); }
+.habit-invite-color-btn--silver { background: rgba(220, 220, 220, 0.95); }
+.habit-invite-color-btn--gold { background: rgba(212, 175, 55, 0.9); }
+.habit-invite-color-btn--emerald { background: rgba(64, 145, 108, 0.9); }
+.habit-invite-color-btn--sapphire { background: rgba(71, 128, 255, 0.9); }
+.habit-invite-color-btn--ruby { background: rgba(200, 60, 60, 0.9); }
+
+.habit-invitation-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.habit-invite-accept,
+.habit-invite-decline {
+  min-width: 84px;
+}
+

@@ -92,7 +92,12 @@ function HomePage() {
                 key={habit.id}
                 habit={habit}
                 onQuickToggle={(updated) =>
-                  setHabits((prev) => prev.map((h) => (h.id === updated.id ? updated : h)))
+                  setHabits((prev) => {
+                    if (!updated) {
+                      return prev.filter((h) => h.id !== habit.id)
+                    }
+                    return prev.map((h) => (h.id === updated.id ? updated : h))
+                  })
                 }
               />
             ))}

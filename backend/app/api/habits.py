@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
@@ -12,10 +12,12 @@ from app.schemas.habit import (
     HabitCreate,
     HabitUpdate,
     HabitLog as HabitLogSchema,
-    HabitLogCreate
+    HabitLogCreate,
 )
 
 router = APIRouter()
+
+ALL_COLORS = ["gray", "silver", "gold", "emerald", "sapphire", "ruby"]
 
 
 @router.get("", response_model=List[HabitSchema])
@@ -44,7 +46,6 @@ async def get_habits(
         participants = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit.id
         ).all()
-        # Даты выполнений текущей недели для этой привычки и пользователя
         week_logs = db.query(func.date(HabitLog.completed_at)).filter(
             HabitLog.habit_id == habit.id,
             HabitLog.user_id == current_user.id,
@@ -53,23 +54,67 @@ async def get_habits(
         ).distinct().all()
         current_week_completions = [str(d[0]) for d in week_logs]
 
-        # Максимальная серия дней подряд (как в статистике)
-        daily_dates = db.query(func.date(HabitLog.completed_at)).filter(
-            HabitLog.habit_id == habit.id,
-            HabitLog.user_id == current_user.id,
-        ).group_by(func.date(HabitLog.completed_at)).order_by(func.date(HabitLog.completed_at)).all()
-        completion_dates = [row[0] for row in daily_dates]
+        participants_by_user = {p.user_id: p for p in participants}
+        accepted_participant_ids = [
+            p.user_id for p in participants if getattr(p, "status", "accepted") == "accepted"
+        ]
+
+        weekly_participant_completions = {}
+        if accepted_participant_ids:
+            week_logs_all = db.query(
+                func.date(HabitLog.completed_at).label("date"),
+                HabitLog.user_id,
+            ).filter(
+                HabitLog.habit_id == habit.id,
+                HabitLog.user_id.in_(accepted_participant_ids),
+                func.date(HabitLog.completed_at) >= week_start,
+                func.date(HabitLog.completed_at) <= week_end,
+            ).all()
+
+            for row in week_logs_all:
+                day = str(row[0])
+                uid = row[1]
+                participant = participants_by_user.get(uid)
+                color = getattr(participant, "color", None) if participant else None
+                if day not in weekly_participant_completions:
+                    weekly_participant_completions[day] = []
+                weekly_participant_completions[day].append(
+                    {"user_id": uid, "color": color}
+                )
+
         max_streak = 0
-        if completion_dates:
-            cur = 1
-            max_streak = 1
-            for i in range(1, len(completion_dates)):
-                if (completion_dates[i] - completion_dates[i - 1]).days == 1:
-                    cur += 1
-                    if cur > max_streak:
-                        max_streak = cur
+        if accepted_participant_ids:
+            common_dates = None
+            for uid in accepted_participant_ids:
+                rows = db.query(func.date(HabitLog.completed_at)).filter(
+                    HabitLog.habit_id == habit.id,
+                    HabitLog.user_id == uid,
+                ).group_by(func.date(HabitLog.completed_at)).order_by(func.date(HabitLog.completed_at)).all()
+                dates = [row[0] for row in rows]
+                date_set = set(dates)
+                if common_dates is None:
+                    common_dates = date_set
                 else:
-                    cur = 1
+                    common_dates &= date_set
+            if common_dates:
+                ordered = sorted(common_dates)
+                cur = 1
+                max_streak = 1
+                for i in range(1, len(ordered)):
+                    if (ordered[i] - ordered[i - 1]).days == 1:
+                        cur += 1
+                        if cur > max_streak:
+                            max_streak = cur
+                    else:
+                        cur = 1
+
+        has_pending_invites = False
+        is_invited = False
+        for p in participants:
+            if p.user_id == current_user.id and getattr(p, "status", "accepted") == "pending":
+                is_invited = True
+            if habit.created_by == current_user.id and p.user_id != current_user.id and getattr(p, "status", "accepted") == "pending":
+                has_pending_invites = True
 
         habit_dict = {
             "id": habit.id,
@@ -86,10 +131,20 @@ async def get_habits(
             "reminder_enabled": getattr(habit, "reminder_enabled", None),
             "reminder_time": getattr(habit, "reminder_time", None),
             "participants": [
-                {"id": p.user_id, "joined_at": p.joined_at} for p in participants
+                {
+                    "id": p.user_id,
+                    "joined_at": p.joined_at,
+                    "status": getattr(p, "status", "accepted"),
+                    "color": getattr(p, "color", None),
+                }
+                for p in participants
             ],
             "current_week_completions": current_week_completions,
             "current_streak": max_streak,
+            "has_pending_invites": has_pending_invites,
+            "is_invited": is_invited,
+            "can_edit": habit.created_by == current_user.id,
+            "weekly_participant_completions": weekly_participant_completions,
         }
         result.append(habit_dict)
 
@@ -119,38 +174,30 @@ async def create_habit(
     db.commit()
     db.refresh(habit)
 
-    # Добавляем создателя как участника
-    participant = HabitParticipant(habit_id=habit.id, user_id=current_user.id)
+    participant = HabitParticipant(
+        habit_id=habit.id,
+        user_id=current_user.id,
+        status="accepted",
+        color=habit.color,
+    )
     db.add(participant)
 
-    # Добавляем других участников, если это совместная привычка
     if habit_data.is_shared and habit_data.participant_ids:
-        for friend_id in habit_data.participant_ids:
-            if friend_id != current_user.id:
-                participant = HabitParticipant(habit_id=habit.id, user_id=friend_id)
-                db.add(participant)
+        unique_ids = {pid for pid in habit_data.participant_ids if pid != current_user.id}
+        if len(unique_ids) + 1 > 6:
+            raise HTTPException(status_code=400, detail="Maximum 6 participants per habit (owner + friends)")
+        for friend_id in unique_ids:
+            participant = HabitParticipant(
+                habit_id=habit.id,
+                user_id=friend_id,
+                status="pending",
+            )
+            db.add(participant)
 
     db.commit()
     db.refresh(habit)
 
-    # Ответ в том же формате, что и get_habit (participants — список dict)
-    participants = db.query(HabitParticipant).filter(HabitParticipant.habit_id == habit.id).all()
-    return {
-        "id": habit.id,
-        "name": habit.name,
-        "description": habit.description,
-        "frequency": habit.frequency,
-        "is_shared": habit.is_shared,
-        "created_by": habit.created_by,
-        "created_at": habit.created_at,
-        "updated_at": habit.updated_at,
-        "color": getattr(habit, "color", None),
-        "days_of_week": getattr(habit, "days_of_week", None),
-        "weekly_goal_days": getattr(habit, "weekly_goal_days", None),
-        "reminder_enabled": getattr(habit, "reminder_enabled", None),
-        "reminder_time": getattr(habit, "reminder_time", None),
-        "participants": [{"id": p.user_id, "joined_at": p.joined_at} for p in participants],
-    }
+    return await get_habit(habit.id, current_user, db)
 
 
 @router.get("/{habit_id}", response_model=HabitSchema)
@@ -173,10 +220,17 @@ async def get_habit(
         if not participant:
             raise HTTPException(status_code=403, detail="Access denied")
 
-    # Формируем ответ с участниками в том же формате, что и в списке привычек
     participants = db.query(HabitParticipant).filter(
         HabitParticipant.habit_id == habit.id
     ).all()
+
+    has_pending_invites = False
+    is_invited = False
+    for p in participants:
+        if p.user_id == current_user.id and getattr(p, "status", "accepted") == "pending":
+            is_invited = True
+        if habit.created_by == current_user.id and p.user_id != current_user.id and getattr(p, "status", "accepted") == "pending":
+            has_pending_invites = True
 
     habit_dict = {
         "id": habit.id,
@@ -193,8 +247,17 @@ async def get_habit(
         "reminder_enabled": getattr(habit, "reminder_enabled", None),
         "reminder_time": getattr(habit, "reminder_time", None),
         "participants": [
-            {"id": p.user_id, "joined_at": p.joined_at} for p in participants
+            {
+                "id": p.user_id,
+                "joined_at": p.joined_at,
+                "status": getattr(p, "status", "accepted"),
+                "color": getattr(p, "color", None),
+            }
+            for p in participants
         ],
+        "has_pending_invites": has_pending_invites,
+        "is_invited": is_invited,
+        "can_edit": habit.created_by == current_user.id,
     }
     return habit_dict
 
@@ -220,24 +283,7 @@ async def update_habit(
 
     db.commit()
     db.refresh(habit)
-    # Возвращаем в том же формате, что и get_habit
-    participants = db.query(HabitParticipant).filter(HabitParticipant.habit_id == habit.id).all()
-    return {
-        "id": habit.id,
-        "name": habit.name,
-        "description": habit.description,
-        "frequency": habit.frequency,
-        "is_shared": habit.is_shared,
-        "created_by": habit.created_by,
-        "created_at": habit.created_at,
-        "updated_at": habit.updated_at,
-        "color": getattr(habit, "color", None),
-        "days_of_week": getattr(habit, "days_of_week", None),
-        "weekly_goal_days": getattr(habit, "weekly_goal_days", None),
-        "reminder_enabled": getattr(habit, "reminder_enabled", None),
-        "reminder_time": getattr(habit, "reminder_time", None),
-        "participants": [{"id": p.user_id, "joined_at": p.joined_at} for p in participants],
-    }
+    return await get_habit(habit_id, current_user, db)
 
 
 @router.delete("/{habit_id}")
@@ -259,6 +305,79 @@ async def delete_habit(
     return {"message": "Habit deleted"}
 
 
+@router.post("/{habit_id}/invitation/accept", response_model=HabitSchema)
+async def accept_invitation(
+    habit_id: UUID,
+    payload: dict = Body(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    habit = db.query(Habit).filter(Habit.id == habit_id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    participant = db.query(HabitParticipant).filter(
+        HabitParticipant.habit_id == habit_id,
+        HabitParticipant.user_id == current_user.id,
+    ).first()
+    if not participant or getattr(participant, "status", "accepted") != "pending":
+        raise HTTPException(status_code=400, detail="No pending invitation for this habit")
+
+    accepted_count = db.query(func.count(HabitParticipant.id)).filter(
+        HabitParticipant.habit_id == habit_id,
+        HabitParticipant.status == "accepted",
+    ).scalar()
+    if accepted_count >= 6:
+        raise HTTPException(status_code=400, detail="Maximum participants reached for this habit")
+
+    requested_color = None
+    if payload and isinstance(payload, dict):
+        value = payload.get("color")
+        if isinstance(value, str):
+            requested_color = value
+
+    accepted_participants = db.query(HabitParticipant).filter(
+        HabitParticipant.habit_id == habit_id,
+        HabitParticipant.status == "accepted",
+    ).all()
+    used_colors = {p.color for p in accepted_participants if p.color}
+
+    color = requested_color
+    if color is None or color not in ALL_COLORS or color in used_colors:
+        available_colors = [c for c in ALL_COLORS if c not in used_colors]
+        if not available_colors:
+            raise HTTPException(status_code=400, detail="No available colors for this habit")
+        color = available_colors[0]
+
+    participant.status = "accepted"
+    participant.color = color
+    db.commit()
+
+    return await get_habit(habit_id, current_user, db)
+
+
+@router.post("/{habit_id}/invitation/decline")
+async def decline_invitation(
+    habit_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    habit = db.query(Habit).filter(Habit.id == habit_id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    participant = db.query(HabitParticipant).filter(
+        HabitParticipant.habit_id == habit_id,
+        HabitParticipant.user_id == current_user.id,
+    ).first()
+    if not participant or getattr(participant, "status", "accepted") != "pending":
+        raise HTTPException(status_code=400, detail="No pending invitation for this habit")
+
+    db.delete(participant)
+    db.commit()
+    return {"message": "Invitation declined"}
+
+
 @router.post("/{habit_id}/complete", response_model=HabitLogSchema)
 async def complete_habit(
     habit_id: UUID,
@@ -274,7 +393,8 @@ async def complete_habit(
     if habit.created_by != current_user.id:
         participant = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit_id,
-            HabitParticipant.user_id == current_user.id
+            HabitParticipant.user_id == current_user.id,
+            HabitParticipant.status == "accepted",
         ).first()
         if not participant:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -323,7 +443,8 @@ async def remove_habit_log(
     if habit.created_by != current_user.id:
         participant = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit_id,
-            HabitParticipant.user_id == current_user.id
+            HabitParticipant.user_id == current_user.id,
+            HabitParticipant.status == "accepted",
         ).first()
         if not participant:
             raise HTTPException(status_code=403, detail="Access denied")
