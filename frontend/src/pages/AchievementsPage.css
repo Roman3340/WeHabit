@@ -22,11 +22,61 @@
   margin: 0;
 }
 
-.achievements-content {
+.achievements-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.ach-block {
   padding: var(--space-lg);
 }
 
-.achievements-placeholder {
-  color: var(--text-muted);
-  margin: 0;
+.ach-block-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.ach-block-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.ach-medal {
+  height: 72px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.ach-medal.locked {
+  filter: grayscale(0.55) brightness(0.9);
+  opacity: 0.7;
+}
+
+.ach-medal.achieved {
+  filter: none;
+  opacity: 1;
+}
+
+.ach-medal--bronze {
+  background: linear-gradient(135deg, #4b2f22, #2e1d16);
+}
+.ach-medal--gold {
+  background: linear-gradient(135deg, #4a3f28, #322a18);
+}
+.ach-medal--diamond {
+  background: linear-gradient(135deg, #123d4a, #0e2c36);
+}
+
+.ach-medal-num {
+  color: #e6e6e6;
 }

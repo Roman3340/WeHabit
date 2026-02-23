@@ -9,6 +9,7 @@ router = APIRouter()
 
 
 @router.get("")
+@router.get("/")
 async def get_feed(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

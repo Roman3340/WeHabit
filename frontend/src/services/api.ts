@@ -157,6 +157,17 @@ export const feedApi = {
     return response.data
   },
 }
+// Achievements
+export const achievementsApi = {
+  getMy: async (): Promise<Array<{ id: string; type: string; tier: number; created_at: string; metadata_?: any }>> => {
+    const response = await api.get('/achievements/my')
+    return response.data
+  },
+  getUser: async (userId: string): Promise<Array<{ id: string; type: string; tier: number; created_at: string; metadata_?: any }>> => {
+    const response = await api.get(`/achievements/user/${userId}`)
+    return response.data
+  },
+}
 // Profile
 export const profileApi = {
   get: async (): Promise<User> => {

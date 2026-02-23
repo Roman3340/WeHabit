@@ -6,7 +6,8 @@ import secrets
 from app.db.database import get_db
 from app.core.security import get_current_user
 from app.core.config import settings
-from app.models import User, Friendship, FeedEvent
+from app.models import User, Friendship, FeedEvent, UserAchievement
+from sqlalchemy import func
 from app.schemas.friendship import Friendship as FriendshipSchema, FriendshipCreate
 
 router = APIRouter()
@@ -104,6 +105,32 @@ async def add_friend(
             if existing.user_id == user_id:
                 existing.status = "accepted"
                 db.commit()
+                # Achievements: friends_count (3,7,10) for both parties
+                thresholds = [(1, 3), (2, 7), (3, 10)]
+                for uid in [current_user.id, user_id]:
+                    total_friends = db.query(func.count(Friendship.id)).filter(
+                        ((Friendship.user_id == uid) | (Friendship.friend_id == uid)),
+                        Friendship.status == "accepted"
+                    ).scalar() or 0
+                    for tier, th in thresholds:
+                        exists_ach = db.query(UserAchievement).filter(
+                            UserAchievement.user_id == uid,
+                            UserAchievement.type == "friends_count",
+                            UserAchievement.tier == tier
+                        ).first()
+                        if not exists_ach and total_friends >= th:
+                            db.add(UserAchievement(user_id=uid, type="friends_count", tier=tier, metadata_={"threshold": th}))
+                            # Create feed events for all of uid's accepted friends
+                            friend_rows = db.query(Friendship).filter(
+                                ((Friendship.user_id == uid) | (Friendship.friend_id == uid)),
+                                Friendship.status == "accepted"
+                            ).all()
+                            friend_ids = {fr.user_id if fr.user_id != uid else fr.friend_id for fr in friend_rows}
+                            for fid in friend_ids:
+                                db.add(FeedEvent(user_id=fid, actor_id=uid, habit_id=None, event_type="achievement"))
+                            # also add self event
+                            db.add(FeedEvent(user_id=uid, actor_id=uid, habit_id=None, event_type="achievement"))
+                            db.commit()
                 return {"message": "Friendship accepted"}
             else:
                 raise HTTPException(status_code=400, detail="Friendship request already sent")

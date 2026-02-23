@@ -6,7 +6,7 @@ from uuid import UUID
 from datetime import date, timedelta, datetime, time, timezone
 from app.db.database import get_db
 from app.core.security import get_current_user
-from app.models import User, Habit, HabitParticipant, HabitLog, FeedEvent
+from app.models import User, Habit, HabitParticipant, HabitLog, FeedEvent, UserAchievement, Friendship
 from app.schemas.habit import (
     Habit as HabitSchema,
     HabitCreate,
@@ -396,6 +396,33 @@ async def accept_invitation(
     ))
     db.commit()
 
+    # Achievements: habit_invites (1,3,5) for owner on any single habit
+    if habit.created_by:
+        accepted_count = db.query(func.count(HabitParticipant.id)).filter(
+            HabitParticipant.habit_id == habit_id,
+            HabitParticipant.status == "accepted",
+        ).scalar() or 0
+        owner_id = habit.created_by
+        thresholds_invites = [(1, 1), (2, 3), (3, 5)]
+        for tier, th in thresholds_invites:
+            exists = db.query(UserAchievement).filter(
+                UserAchievement.user_id == owner_id,
+                UserAchievement.type == "habit_invites",
+                UserAchievement.tier == tier
+            ).first()
+            if not exists and accepted_count >= th:
+                db.add(UserAchievement(user_id=owner_id, type="habit_invites", tier=tier, metadata_={"threshold": th, "habit_id": str(habit_id)}))
+                # notify owner's friends
+                friend_rows = db.query(Friendship).filter(
+                    ((Friendship.user_id == owner_id) | (Friendship.friend_id == owner_id)),
+                    Friendship.status == "accepted"
+                ).all()
+                friend_ids = {fr.user_id if fr.user_id != owner_id else fr.friend_id for fr in friend_rows}
+                for fid in friend_ids:
+                    db.add(FeedEvent(user_id=fid, actor_id=owner_id, habit_id=habit_id, event_type="achievement"))
+                db.add(FeedEvent(user_id=owner_id, actor_id=owner_id, habit_id=habit_id, event_type="achievement"))
+                db.commit()
+
     return await get_habit(habit_id, current_user, db)
 
 
@@ -499,6 +526,66 @@ async def complete_habit(
                 event_type="completed",
             ))
         db.commit()
+
+    # Achievements: total_days (7,14,21)
+    total_days = db.query(func.count(func.distinct(func.date(HabitLog.completed_at)))).filter(
+        HabitLog.user_id == current_user.id
+    ).scalar() or 0
+    thresholds_total = [(1, 7), (2, 14), (3, 21)]
+    for tier, th in thresholds_total:
+        exists = db.query(UserAchievement).filter(
+            UserAchievement.user_id == current_user.id,
+            UserAchievement.type == "total_days",
+            UserAchievement.tier == tier
+        ).first()
+        if not exists and total_days >= th:
+            db.add(UserAchievement(user_id=current_user.id, type="total_days", tier=tier, metadata_={"threshold": th}))
+            # feed: achievement -> for all friends and self
+            friend_rows = db.query(Friendship).filter(
+                ((Friendship.user_id == current_user.id) | (Friendship.friend_id == current_user.id)),
+                Friendship.status == "accepted"
+            ).all()
+            friend_ids = {fr.user_id if fr.user_id != current_user.id else fr.friend_id for fr in friend_rows}
+            for fid in friend_ids:
+                db.add(FeedEvent(user_id=fid, actor_id=current_user.id, habit_id=None, event_type="achievement"))
+            db.add(FeedEvent(user_id=current_user.id, actor_id=current_user.id, habit_id=None, event_type="achievement"))
+            db.commit()
+
+    # Achievements: streak (5,15,30) for any single habit
+    # compute current streak for this habit for the current user
+    rows = db.query(func.date(HabitLog.completed_at)).filter(
+        HabitLog.habit_id == habit_id,
+        HabitLog.user_id == current_user.id,
+    ).group_by(func.date(HabitLog.completed_at)).order_by(func.date(HabitLog.completed_at)).all()
+    dates = [r[0] for r in rows]
+    streak = 0
+    if dates:
+        # count consecutive days ending at target_date
+        target = target_date
+        s = 0
+        dset = set(dates)
+        while target in dset:
+            s += 1
+            target = target - timedelta(days=1)
+        streak = s
+    thresholds_streak = [(1, 5), (2, 15), (3, 30)]
+    for tier, th in thresholds_streak:
+        exists = db.query(UserAchievement).filter(
+            UserAchievement.user_id == current_user.id,
+            UserAchievement.type == "streak",
+            UserAchievement.tier == tier
+        ).first()
+        if not exists and streak >= th:
+            db.add(UserAchievement(user_id=current_user.id, type="streak", tier=tier, metadata_={"threshold": th, "habit_id": str(habit_id)}))
+            friend_rows = db.query(Friendship).filter(
+                ((Friendship.user_id == current_user.id) | (Friendship.friend_id == current_user.id)),
+                Friendship.status == "accepted"
+            ).all()
+            friend_ids = {fr.user_id if fr.user_id != current_user.id else fr.friend_id for fr in friend_rows}
+            for fid in friend_ids:
+                db.add(FeedEvent(user_id=fid, actor_id=current_user.id, habit_id=habit_id, event_type="achievement"))
+            db.add(FeedEvent(user_id=current_user.id, actor_id=current_user.id, habit_id=habit_id, event_type="achievement"))
+            db.commit()
     return log
 
 

@@ -225,11 +225,35 @@
 
 .habit-invitation-actions--full {
   margin-top: 12px;
-  align-items: stretch;
+  align-items: center;
 }
 
 .habit-invitation-actions--full .habit-invitation-buttons {
+  width: auto;
+  justify-content: flex-start;
+}
+
+/* Полноэкранный оверлей для попапа выбора цвета на главной */
+.habit-cell-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-md);
+}
+
+.habit-cell-popup {
+  max-width: 340px;
   width: 100%;
-  justify-content: space-between;
+  padding: var(--space-lg);
+}
+
+.habit-cell-popup-title {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
 }
 
