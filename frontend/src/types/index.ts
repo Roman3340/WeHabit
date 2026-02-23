@@ -33,6 +33,14 @@ export interface Habit {
     joined_at: string
     status?: string
     color?: HabitColor
+    user?: {
+      id: string
+      username?: string
+      first_name?: string
+      last_name?: string
+      avatar_emoji: string
+      bio?: string
+    } | null
   }>
   /** Даты выполнений за текущую неделю (YYYY-MM-DD) */
   current_week_completions?: string[]

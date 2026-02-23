@@ -6,7 +6,7 @@ import secrets
 from app.db.database import get_db
 from app.core.security import get_current_user
 from app.core.config import settings
-from app.models import User, Friendship
+from app.models import User, Friendship, FeedEvent
 from app.schemas.friendship import Friendship as FriendshipSchema, FriendshipCreate
 
 router = APIRouter()
@@ -101,7 +101,6 @@ async def add_friend(
         if existing.status == "accepted":
             raise HTTPException(status_code=400, detail="Already friends")
         elif existing.status == "pending":
-            # Если запрос от другого пользователя, принимаем его
             if existing.user_id == user_id:
                 existing.status = "accepted"
                 db.commit()

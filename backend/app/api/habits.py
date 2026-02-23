@@ -6,7 +6,7 @@ from uuid import UUID
 from datetime import date, timedelta, datetime, time, timezone
 from app.db.database import get_db
 from app.core.security import get_current_user
-from app.models import User, Habit, HabitParticipant, HabitLog
+from app.models import User, Habit, HabitParticipant, HabitLog, FeedEvent
 from app.schemas.habit import (
     Habit as HabitSchema,
     HabitCreate,
@@ -46,6 +46,11 @@ async def get_habits(
         participants = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit.id
         ).all()
+        # users cache by id
+        users_by_id = {}
+        for p in participants:
+            if p.user_id not in users_by_id:
+                users_by_id[p.user_id] = db.query(User).filter(User.id == p.user_id).first()
         week_logs = db.query(func.date(HabitLog.completed_at)).filter(
             HabitLog.habit_id == habit.id,
             HabitLog.user_id == current_user.id,
@@ -136,6 +141,14 @@ async def get_habits(
                     "joined_at": p.joined_at,
                     "status": getattr(p, "status", "accepted"),
                     "color": getattr(p, "color", None),
+                    "user": (lambda u: {
+                        "id": u.id,
+                        "username": u.username,
+                        "first_name": u.first_name,
+                        "last_name": u.last_name,
+                        "avatar_emoji": u.avatar_emoji,
+                        "bio": u.bio,
+                    } if u else None)(users_by_id.get(p.user_id)),
                 }
                 for p in participants
             ],
@@ -223,6 +236,10 @@ async def get_habit(
     participants = db.query(HabitParticipant).filter(
         HabitParticipant.habit_id == habit.id
     ).all()
+    users_by_id = {}
+    for p in participants:
+        if p.user_id not in users_by_id:
+            users_by_id[p.user_id] = db.query(User).filter(User.id == p.user_id).first()
 
     has_pending_invites = False
     is_invited = False
@@ -252,6 +269,14 @@ async def get_habit(
                 "joined_at": p.joined_at,
                 "status": getattr(p, "status", "accepted"),
                 "color": getattr(p, "color", None),
+                "user": (lambda u: {
+                    "id": u.id,
+                    "username": u.username,
+                    "first_name": u.first_name,
+                    "last_name": u.last_name,
+                    "avatar_emoji": u.avatar_emoji,
+                    "bio": u.bio,
+                } if u else None)(users_by_id.get(p.user_id)),
             }
             for p in participants
         ],
@@ -352,6 +377,14 @@ async def accept_invitation(
     participant.status = "accepted"
     participant.color = color
     db.commit()
+    # feed: joined -> for creator
+    db.add(FeedEvent(
+        user_id=habit.created_by,
+        actor_id=current_user.id,
+        habit_id=habit_id,
+        event_type="joined",
+    ))
+    db.commit()
 
     return await get_habit(habit_id, current_user, db)
 
@@ -374,6 +407,14 @@ async def decline_invitation(
         raise HTTPException(status_code=400, detail="No pending invitation for this habit")
 
     db.delete(participant)
+    db.commit()
+    # feed: declined -> for creator
+    db.add(FeedEvent(
+        user_id=habit.created_by,
+        actor_id=current_user.id,
+        habit_id=habit_id,
+        event_type="declined",
+    ))
     db.commit()
     return {"message": "Invitation declined"}
 
@@ -425,7 +466,140 @@ async def complete_habit(
     db.add(log)
     db.commit()
     db.refresh(log)
+    # feed: completed -> for other accepted participants and creator (except actor)
+    if habit.is_shared:
+        accepted = db.query(HabitParticipant).filter(
+            HabitParticipant.habit_id == habit_id,
+            HabitParticipant.status == "accepted",
+        ).all()
+        for p in accepted:
+            if p.user_id == current_user.id:
+                continue
+            db.add(FeedEvent(
+                user_id=p.user_id,
+                actor_id=current_user.id,
+                habit_id=habit_id,
+                event_type="completed",
+            ))
+        if habit.created_by != current_user.id:
+            db.add(FeedEvent(
+                user_id=habit.created_by,
+                actor_id=current_user.id,
+                habit_id=habit_id,
+                event_type="completed",
+            ))
+        db.commit()
     return log
+
+
+@router.post("/{habit_id}/invite")
+async def invite_participants(
+    habit_id: UUID,
+    payload: dict = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Пригласить дополнительных друзей в привычку (создатель)."""
+    habit = db.query(Habit).filter(Habit.id == habit_id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    if habit.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Only creator can invite participants")
+    user_ids = payload.get("user_ids") if isinstance(payload, dict) else None
+    if not isinstance(user_ids, list):
+        raise HTTPException(status_code=400, detail="user_ids must be a list")
+    user_ids = [uid for uid in user_ids if uid and uid != str(current_user.id)]
+
+    existing = db.query(HabitParticipant).filter(HabitParticipant.habit_id == habit_id).all()
+    existing_ids = {str(p.user_id) for p in existing}
+    to_add = [uid for uid in user_ids if uid not in existing_ids]
+
+    if len(existing_ids) + len(to_add) > 6:
+        raise HTTPException(status_code=400, detail="Maximum 6 participants per habit (owner + friends)")
+
+    for uid in to_add:
+        db.add(HabitParticipant(
+            habit_id=habit_id,
+            user_id=uid,
+            status="pending",
+        ))
+        db.add(FeedEvent(
+            user_id=uid,
+            actor_id=current_user.id,
+            habit_id=habit_id,
+            event_type="invited",
+        ))
+    db.commit()
+    return await get_habit(habit_id, current_user, db)
+
+
+@router.delete("/{habit_id}/participants/{user_id}")
+async def remove_participant(
+    habit_id: UUID,
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Удалить участника из привычки (создатель). Удаляет также его отметки для этой привычки."""
+    habit = db.query(Habit).filter(Habit.id == habit_id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    if habit.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Only creator can remove participants")
+
+    participant = db.query(HabitParticipant).filter(
+        HabitParticipant.habit_id == habit_id,
+        HabitParticipant.user_id == user_id,
+    ).first()
+    if not participant:
+        raise HTTPException(status_code=404, detail="Participant not found")
+
+    db.query(HabitLog).filter(
+        HabitLog.habit_id == habit_id,
+        HabitLog.user_id == user_id,
+    ).delete()
+    db.delete(participant)
+    db.commit()
+    return await get_habit(habit_id, current_user, db)
+
+
+@router.post("/{habit_id}/leave")
+async def leave_habit(
+    habit_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Участник выходит из привычки. Все его отметки по этой привычке удаляются."""
+    habit = db.query(Habit).filter(Habit.id == habit_id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    # создатель не может выйти таким образом
+    if habit.created_by == current_user.id:
+        raise HTTPException(status_code=400, detail="Creator cannot leave own habit")
+
+    participant = db.query(HabitParticipant).filter(
+        HabitParticipant.habit_id == habit_id,
+        HabitParticipant.user_id == current_user.id,
+        HabitParticipant.status == "accepted",
+    ).first()
+    if not participant:
+        raise HTTPException(status_code=404, detail="You are not a participant of this habit")
+
+    db.query(HabitLog).filter(
+        HabitLog.habit_id == habit_id,
+        HabitLog.user_id == current_user.id,
+    ).delete()
+    db.delete(participant)
+    db.commit()
+    # feed: left -> for creator
+    db.add(FeedEvent(
+        user_id=habit.created_by,
+        actor_id=current_user.id,
+        habit_id=habit_id,
+        event_type="left",
+    ))
+    db.commit()
+    return {"message": "Left the habit"}
 
 
 @router.delete("/{habit_id}/logs/{log_date}")

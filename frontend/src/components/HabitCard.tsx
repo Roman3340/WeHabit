@@ -33,9 +33,10 @@ function getCurrentWeekDates(): string[] {
 interface HabitCardProps {
   habit: Habit
   onQuickToggle?: (updated: Habit | null) => void
+  onRefreshHabits?: () => void
 }
 
-function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
+function HabitCard({ habit, onQuickToggle, onRefreshHabits }: HabitCardProps) {
   const navigate = useNavigate()
   const isInvitation = habit.is_invited === true
   const colorClass = isInvitation
@@ -45,8 +46,9 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
       : 'habit-card--gold'
 
   const ALL_COLORS: HabitColor[] = ['gray', 'silver', 'gold', 'emerald', 'sapphire', 'ruby']
-  const [inviteColor, setInviteColor] = useState<HabitColor | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
+  const [showColorModal, setShowColorModal] = useState(false)
+  const [selectedColor, setSelectedColor] = useState<HabitColor | null>(null)
 
   const weekDates = useMemo(() => getCurrentWeekDates(), [])
   const completionsSet = useMemo(
@@ -105,33 +107,43 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
     try {
       if (completedToday) {
         await habitsApi.removeLog(habit.id, todayKey)
-        if (onQuickToggle) {
-          const next = (habit.current_week_completions || []).filter((d) => d !== todayKey)
-          onQuickToggle({ ...habit, current_week_completions: next })
-        }
+        onRefreshHabits && onRefreshHabits()
+        onQuickToggle && onQuickToggle(habit)
       } else {
         await habitsApi.complete(habit.id, { date: todayKey })
-        if (onQuickToggle) {
-          const set = new Set(habit.current_week_completions || [])
-          set.add(todayKey)
-          onQuickToggle({ ...habit, current_week_completions: Array.from(set) })
-        }
+        onRefreshHabits && onRefreshHabits()
+        onQuickToggle && onQuickToggle(habit)
       }
     } catch (error) {
       console.error('Failed to toggle quick completion', error)
     }
   }
 
-  const handleAcceptInvitation = async (e: React.MouseEvent) => {
+  const availableColors: HabitColor[] = useMemo(() => {
+    const used = new Set<HabitColor>()
+    ;(habit.participants || []).forEach((p) => {
+      if (p.status === 'accepted' && p.color) {
+        used.add(p.color as HabitColor)
+      }
+    })
+    return ALL_COLORS.filter((c) => !used.has(c))
+  }, [habit.participants])
+
+  const openAcceptModal = (e: React.MouseEvent) => {
     e.stopPropagation()
+    setSelectedColor(null)
+    setShowColorModal(true)
+  }
+
+  const handleAcceptSave = async () => {
+    if (!selectedColor) return
     if (inviteLoading) return
     setInviteLoading(true)
     try {
-      const payload = inviteColor ? { color: inviteColor } : undefined
-      const updated = await habitsApi.acceptInvitation(habit.id, payload as any)
-      if (onQuickToggle && updated) {
-        onQuickToggle(updated)
-      }
+      const updated = await habitsApi.acceptInvitation(habit.id, { color: selectedColor })
+      setShowColorModal(false)
+      onRefreshHabits && onRefreshHabits()
+      onQuickToggle && onQuickToggle(updated)
     } catch (error) {
       console.error('Failed to accept invitation', error)
       alert('Не удалось принять приглашение')
@@ -146,9 +158,8 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
     setInviteLoading(true)
     try {
       await habitsApi.declineInvitation(habit.id)
-      if (onQuickToggle) {
-        onQuickToggle(null)
-      }
+      onRefreshHabits && onRefreshHabits()
+      onQuickToggle && onQuickToggle(null)
     } catch (error) {
       console.error('Failed to decline invitation', error)
       alert('Не удалось отклонить приглашение')
@@ -172,13 +183,13 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
         )}
         <div className="habit-header">
           <h3 className="habit-name">{habit.name}</h3>
-          {habit.is_shared && <span className="shared-badge">👥</span>}
         </div>
         {habit.description && (
           <p className="habit-description">{habit.description}</p>
         )}
         <div className="habit-footer">
           <div className="habit-footer-left">
+            {habit.is_shared && <span className="shared-badge">👥 Совместная</span>}
             {!isInvitation && (
               <div className="habit-days-block">
                 <div className="habit-days-squares">
@@ -219,30 +230,14 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
           )}
           {isInvitation && (
             <div className="habit-invitation-actions">
-              <div className="habit-invitation-colors">
-                {ALL_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={`habit-invite-color-btn habit-invite-color-btn--${c} ${
-                      inviteColor === c ? 'active' : ''
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setInviteColor(c)
-                    }}
-                    aria-label={c}
-                  />
-                ))}
-              </div>
               <div className="habit-invitation-buttons">
                 <button
                   type="button"
                   className="btn btn-success habit-invite-accept"
-                  onClick={handleAcceptInvitation}
+                  onClick={openAcceptModal}
                   disabled={inviteLoading}
                 >
-                  {inviteLoading ? '…' : 'Принять'}
+                  Принять
                 </button>
                 <button
                   type="button"
@@ -257,6 +252,41 @@ function HabitCard({ habit, onQuickToggle }: HabitCardProps) {
           )}
         </div>
       </div>
+      {showColorModal && (
+        <div className="habit-cell-popup-overlay" onClick={() => setShowColorModal(false)}>
+          <div className="habit-cell-popup glass-card" onClick={(e) => e.stopPropagation()}>
+            <h3 className="habit-cell-popup-title">Выберите свой цвет</h3>
+            <div className="habit-form-colors" style={{ marginBottom: '12px' }}>
+              {availableColors.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`habit-form-color-btn habit-form-color-btn--${c} ${selectedColor === c ? 'active' : ''}`}
+                  onClick={() => setSelectedColor(c)}
+                />
+              ))}
+              {availableColors.length === 0 && (
+                <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Нет доступных цветов</div>
+              )}
+            </div>
+            <button
+              type="button"
+              className="btn btn-success"
+              disabled={!selectedColor || inviteLoading}
+              onClick={handleAcceptSave}
+            >
+              Сохранить
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary habit-cell-popup-close"
+              onClick={() => setShowColorModal(false)}
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -24,6 +24,15 @@ function HomePage() {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
+  const refreshHabits = async () => {
+    try {
+      const data = await habitsApi.getAll()
+      setHabits(data)
+    } catch (error) {
+      console.error('Failed to refresh habits:', error)
+    }
+  }
+
   useEffect(() => {
     const loadHabits = async () => {
       try {
@@ -99,6 +108,7 @@ function HomePage() {
                     return prev.map((h) => (h.id === updated.id ? updated : h))
                   })
                 }
+                onRefreshHabits={refreshHabits}
               />
             ))}
           </div>

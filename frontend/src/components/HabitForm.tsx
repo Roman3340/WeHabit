@@ -30,9 +30,11 @@ interface HabitFormProps {
   onSubmit: (data: HabitFormData) => void
   initialData?: Partial<HabitFormData>
   submitLabel?: string
+  excludeUserIds?: string[]
+  allowedColors?: HabitColor[]
 }
 
-function HabitForm({ onSubmit, initialData, submitLabel = 'Создать привычку' }: HabitFormProps) {
+function HabitForm({ onSubmit, initialData, submitLabel = 'Создать привычку', excludeUserIds, allowedColors }: HabitFormProps) {
   const [name, setName] = useState(initialData?.name || '')
   const [description, setDescription] = useState(initialData?.description || '')
   const [frequency] = useState(initialData?.frequency || 'daily')
@@ -138,20 +140,22 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
         />
       </div>
 
-      <div className="form-group">
-        <div className="habit-form-section-title">Цвет блока</div>
-        <div className="habit-form-colors">
-          {COLORS.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              className={`habit-form-color-btn habit-form-color-btn--${c.value} ${color === c.value ? 'active' : ''}`}
-              onClick={() => setColor(c.value)}
-              title={c.label}
-            />
-          ))}
+      {allowedColors === undefined || allowedColors.length > 0 ? (
+        <div className="form-group">
+          <div className="habit-form-section-title">Цвет блока</div>
+          <div className="habit-form-colors">
+            {(allowedColors ? COLORS.filter((c) => allowedColors.includes(c.value)) : COLORS).map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                className={`habit-form-color-btn habit-form-color-btn--${c.value} ${color === c.value ? 'active' : ''}`}
+                onClick={() => setColor(c.value)}
+                title={c.label}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="form-group">
         <div className="habit-form-section-title">Дни недели</div>
@@ -248,6 +252,7 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
               {friends.map((fr) => {
                 const friend = fr.friend
                 if (!friend) return null
+                if (excludeUserIds && excludeUserIds.includes(friend.id)) return null
                 const selected = selectedFriendIds.includes(friend.id)
                 const displayName =
                   [friend.first_name, friend.last_name].filter(Boolean).join(' ') ||

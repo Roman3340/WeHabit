@@ -42,6 +42,20 @@ export const habitsApi = {
     return response.data
   },
   
+  invite: async (habitId: string, userIds: string[]): Promise<Habit> => {
+    const response = await api.post(`/habits/${habitId}/invite`, { user_ids: userIds })
+    return response.data
+  },
+  
+  removeParticipant: async (habitId: string, userId: string): Promise<Habit> => {
+    const response = await api.delete(`/habits/${habitId}/participants/${userId}`)
+    return response.data
+  },
+  
+  leave: async (habitId: string): Promise<void> => {
+    await api.post(`/habits/${habitId}/leave`)
+  },
+  
   getById: async (id: string): Promise<Habit> => {
     const response = await api.get(`/habits/${id}`)
     return response.data
@@ -130,6 +144,19 @@ export const statsApi = {
   },
 }
 
+// Feed
+export const feedApi = {
+  getAll: async (): Promise<Array<{
+    id: string
+    event_type: string
+    created_at: string
+    habit?: { id: string; name: string } | null
+    actor?: { id: string; username?: string; first_name?: string; last_name?: string; avatar_emoji: string } | null
+  }>> => {
+    const response = await api.get('/feed')
+    return response.data
+  },
+}
 // Profile
 export const profileApi = {
   get: async (): Promise<User> => {

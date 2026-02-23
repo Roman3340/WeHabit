@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { habitsApi, statsApi, profileApi } from '../services/api'
+import { habitsApi, statsApi, profileApi, friendsApi } from '../services/api'
 import type { Habit, HabitStats, HabitColor } from '../types'
 import { getDayLabels, formatDateKey } from '../utils/week'
 import type { FirstDayOfWeek } from '../utils/week'
@@ -39,6 +39,13 @@ function HabitDetailPage() {
   const [popupLoading, setPopupLoading] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [acceptModalOpen, setAcceptModalOpen] = useState(false)
+  const [selectedColor, setSelectedColor] = useState<HabitColor | null>(null)
+  const [inviteModalOpen, setInviteModalOpen] = useState(false)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteFriends, setInviteFriends] = useState<Array<{ id: string; name: string; avatar: string }>>([])
+  const [inviteSelected, setInviteSelected] = useState<string[]>([])
+  const [profilePopup, setProfilePopup] = useState<{ userId: string; name: string; avatar: string; bio?: string } | null>(null)
 
   useEffect(() => {
     if (id) {
@@ -297,6 +304,127 @@ function HabitDetailPage() {
     }
   }
 
+  const openAcceptModal = () => {
+    setSelectedColor(null)
+    setAcceptModalOpen(true)
+  }
+
+  const availableColors: HabitColor[] = useMemo(() => {
+    if (!habit) return []
+    const used = new Set<HabitColor>()
+    ;(habit.participants || []).forEach((p) => {
+      if (p.status === 'accepted' && p.color) {
+        used.add(p.color as HabitColor)
+      }
+    })
+    return ALL_COLORS.filter((c) => !used.has(c))
+  }, [habit?.participants])
+
+  const handleAcceptInvitation = async () => {
+    if (!habit || !id) return
+    if (!selectedColor) return
+    setInviteLoading(true)
+    try {
+      await habitsApi.acceptInvitation(id, { color: selectedColor })
+      setAcceptModalOpen(false)
+      await loadHabit()
+      await loadStats()
+    } catch (error) {
+      alert('Не удалось принять приглашение')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  const handleDeclineInvitation = async () => {
+    if (!habit || !id) return
+    setInviteLoading(true)
+    try {
+      await habitsApi.declineInvitation(id)
+      navigate('/')
+    } catch {
+      alert('Не удалось отклонить приглашение')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  const handleOpenInviteModal = async () => {
+    if (!habit) return
+    setInviteModalOpen(true)
+    setInviteSelected([])
+    try {
+      const friends = await friendsApi.getAll()
+      const participantIds = new Set((habit.participants || []).map((p) => p.id))
+      const candidates = friends
+        .map((fr) => fr.friend)
+        .filter(Boolean)
+        .filter((u) => !participantIds.has(u!.id))
+        .map((u) => ({
+          id: u!.id,
+          name: ([u!.first_name, u!.last_name].filter(Boolean).join(' ') || u!.username || 'Друг'),
+          avatar: u!.avatar_emoji,
+        }))
+      setInviteFriends(candidates)
+    } catch (e) {
+      console.error('Failed to load friends', e)
+    }
+  }
+
+  const toggleInviteSelect = (uid: string) => {
+    setInviteSelected((prev) => {
+      const inHabit = (habit?.participants || []).length
+      const maxSelectable = Math.max(0, 6 - inHabit)
+      if (prev.includes(uid)) {
+        return prev.filter((id) => id !== uid)
+      }
+      if (prev.length >= maxSelectable) return prev
+      return [...prev, uid]
+    })
+  }
+
+  const handleInviteSubmit = async () => {
+    if (!habit || !id) return
+    if (inviteSelected.length === 0) {
+      setInviteModalOpen(false)
+      return
+    }
+    setInviteLoading(true)
+    try {
+      await habitsApi.invite(id, inviteSelected)
+      setInviteModalOpen(false)
+      await loadHabit()
+    } catch (e: any) {
+      alert(e?.response?.data?.detail || 'Не удалось отправить приглашения')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  const handleRemoveParticipant = async (uid: string) => {
+    if (!habit || !id) return
+    if (!confirm('Удалить участника из привычки? Все его отметки будут удалены.')) return
+    try {
+      await habitsApi.removeParticipant(id, uid)
+      setProfilePopup(null)
+      await loadHabit()
+      await loadStats()
+    } catch {
+      alert('Не удалось удалить участника')
+    }
+  }
+
+  const handleLeaveHabit = async () => {
+    if (!habit || !id) return
+    if (!confirm('Выйти из привычки? Все ваши отметки будут удалены.')) return
+    try {
+      await habitsApi.leave(id)
+      navigate('/')
+    } catch {
+      alert('Не удалось выйти из привычки')
+    }
+  }
+
   if (loading) {
     return (
       <div className="page-container">
@@ -348,6 +476,20 @@ function HabitDetailPage() {
               reminder_enabled: habit.reminder_enabled,
               reminder_time: habit.reminder_time,
             }}
+            excludeUserIds={(habit.participants || []).map((p) => p.id)}
+            allowedColors={(() => {
+              if (!habit.is_shared) return undefined
+              // Владелец не может выбирать цвета, занятые другими участниками (accepted)
+              const usedByOthers = new Set<HabitColor>()
+              ;(habit.participants || []).forEach((p) => {
+                if (p.id !== habit.created_by && p.status === 'accepted' && p.color) {
+                  usedByOthers.add(p.color as HabitColor)
+                }
+              })
+              const ALL: HabitColor[] = ['gray', 'silver', 'gold', 'emerald', 'sapphire', 'ruby']
+              const allowed = ALL.filter((c) => !usedByOthers.has(c))
+              return allowed.length ? allowed : []
+            })()}
           />
         </div>
       ) : (
@@ -355,7 +497,6 @@ function HabitDetailPage() {
           <div className="habit-detail-title">
             <div className="habit-detail-title-text">
               <h1>{habit.name}</h1>
-              {habit.is_shared && <span className="shared-badge">👥 Совместная</span>}
             </div>
             {habit.can_edit && (
               <button
@@ -371,6 +512,35 @@ function HabitDetailPage() {
 
           {habit.description && (
             <p className="habit-detail-description">{habit.description}</p>
+          )}
+
+          {habit.is_shared && (
+            <div className="habit-detail-info" style={{ marginTop: '-8px' }}>
+              <div className="info-item" style={{ alignItems: 'center' }}>
+                <span className="info-label">Участвуют:</span>
+                <span className="info-value" style={{ display: 'flex', gap: 8 }}>
+                  {(habit.participants || []).filter((p) => p.status !== 'pending').map((p) => {
+                    const u = p.user
+                    const name = u ? ([u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Друг') : 'Участник'
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="avatar-btn"
+                        title={name}
+                        onClick={() => u && setProfilePopup({ userId: u.id, name, avatar: u.avatar_emoji, bio: u.bio })}
+                        style={{
+                          width: 28, height: 28, borderRadius: 999, display: 'inline-flex',
+                          alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)'
+                        }}
+                      >
+                        <span style={{ fontSize: 18, lineHeight: 1 }}>{u?.avatar_emoji || '👤'}</span>
+                      </button>
+                    )
+                  })}
+                </span>
+              </div>
+            </div>
           )}
 
           <div className="habit-detail-info">
@@ -467,6 +637,26 @@ function HabitDetailPage() {
                 {completing ? 'Отмечаю...' : '✓ Отметить выполнение'}
               </button>
             )}
+            {habit.is_invited && (
+              <>
+                <button className="btn btn-success" onClick={openAcceptModal} disabled={inviteLoading}>
+                  Принять
+                </button>
+                <button className="btn btn-secondary" onClick={handleDeclineInvitation} disabled={inviteLoading}>
+                  Отклонить
+                </button>
+              </>
+            )}
+            {habit.can_edit && !habit.is_invited && (
+              <button className="btn" onClick={handleOpenInviteModal} disabled={inviteLoading}>
+                Пригласить друга
+              </button>
+            )}
+            {!habit.can_edit && !habit.is_invited && (
+              <button className="btn btn-secondary" onClick={handleLeaveHabit}>
+                Выйти из привычки
+              </button>
+            )}
             {habit.can_edit && (
               <button
                 type="button"
@@ -506,6 +696,81 @@ function HabitDetailPage() {
               </button>
             )}
             <button type="button" className="btn btn-secondary habit-cell-popup-close" onClick={() => setPopupDate(null)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
+      )}
+
+      {acceptModalOpen && (
+        <div className="habit-cell-popup-overlay" onClick={() => setAcceptModalOpen(false)}>
+          <div className="glass-card habit-cell-popup" onClick={(e) => e.stopPropagation()}>
+            <h3 className="habit-cell-popup-title">Выберите свой цвет</h3>
+            <div className="habit-form-colors" style={{ marginBottom: '12px' }}>
+              {availableColors.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`habit-form-color-btn habit-form-color-btn--${c} ${selectedColor === c ? 'active' : ''}`}
+                  onClick={() => setSelectedColor(c)}
+                />
+              ))}
+            </div>
+            <button className="btn btn-success" disabled={!selectedColor || inviteLoading} onClick={handleAcceptInvitation}>
+              Сохранить
+            </button>
+            <button className="btn btn-secondary habit-cell-popup-close" onClick={() => setAcceptModalOpen(false)}>
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
+
+      {inviteModalOpen && (
+        <div className="habit-cell-popup-overlay" onClick={() => setInviteModalOpen(false)}>
+          <div className="glass-card habit-cell-popup" onClick={(e) => e.stopPropagation()}>
+            <h3 className="habit-cell-popup-title">Пригласить друзей</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12, maxHeight: 260, overflow: 'auto' }}>
+              {inviteFriends.length === 0 && <div style={{ color: 'var(--text-muted)' }}>Нет доступных друзей</div>}
+              {inviteFriends.map((f) => {
+                const selected = inviteSelected.includes(f.id)
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`habit-form-friend-btn ${selected ? 'selected' : ''}`}
+                    onClick={() => toggleInviteSelect(f.id)}
+                  >
+                    <span className="habit-form-friend-avatar">{f.avatar}</span>
+                    <span className="habit-form-friend-name">{f.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <button className="btn btn-success" onClick={handleInviteSubmit} disabled={inviteLoading || inviteSelected.length === 0}>
+              Пригласить
+            </button>
+            <button className="btn btn-secondary habit-cell-popup-close" onClick={() => setInviteModalOpen(false)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
+      )}
+
+      {profilePopup && (
+        <div className="habit-cell-popup-overlay" onClick={() => setProfilePopup(null)}>
+          <div className="glass-card habit-cell-popup" onClick={(e) => e.stopPropagation()}>
+            <h3 className="habit-cell-popup-title">{profilePopup.name}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <div style={{ fontSize: 28 }}>{profilePopup.avatar}</div>
+              <div style={{ color: 'var(--text-muted)' }}>{profilePopup.bio || 'Без описания'}</div>
+            </div>
+            {habit.can_edit && profilePopup.userId !== habit.created_by && (
+              <button className="btn btn-secondary" onClick={() => handleRemoveParticipant(profilePopup.userId)}>
+                Удалить из привычки
+              </button>
+            )}
+            <button className="btn btn-secondary habit-cell-popup-close" onClick={() => setProfilePopup(null)}>
               Закрыть
             </button>
           </div>

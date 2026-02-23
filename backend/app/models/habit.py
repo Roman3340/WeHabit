@@ -75,3 +75,23 @@ class HabitNotification(Base):
     habit = relationship("Habit", back_populates="notifications")
     user = relationship("User")
 
+
+class FeedEvent(Base):
+    __tablename__ = "feed_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Для кого показывается событие
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    # Кто совершил действие
+    actor_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    # Какому объекту привычки относится событие (может быть NULL для общих событий)
+    habit_id = Column(UUID(as_uuid=True), ForeignKey("habits.id", ondelete="SET NULL"))
+    # Тип события: invited | joined | declined | left | completed
+    event_type = Column(String(32), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id])
+    actor = relationship("User", foreign_keys=[actor_id])
+    habit = relationship("Habit")
+
