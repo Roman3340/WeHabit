@@ -2,29 +2,26 @@ import os
 import sys
 import time
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
-from sqlalchemy import create_engine, select, and_
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
-from telegram import Bot
-from telegram.ext import Updater
-from telegram.constants import ParseMode
+from aiogram import Bot
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Add the project root to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.models.user import User
-from app.models.habit import Habit, HabitParticipant
-from app.core.config import get_settings
+from app.models.habit import Habit, HabitParticipant, FeedEvent
+from app.core.config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-settings = get_settings()
-
-DATABASE_URL = settings.database_url
-TELEGRAM_BOT_TOKEN = settings.telegram_bot_token
-MINI_APP_URL = settings.mini_app_url
+DATABASE_URL = settings.DATABASE_URL
+TELEGRAM_BOT_TOKEN = settings.TELEGRAM_BOT_TOKEN
+MINI_APP_URL = settings.TELEGRAM_MINIAPP_DEEPLINK
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -32,15 +29,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 async def send_notification(bot: Bot, user_id: int, message: str):
     """Sends a notification to a user."""
     try:
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Открыть приложение", web_app={"url": settings.TELEGRAM_MINIAPP_DEEPLINK})]
+        ])
         await bot.send_message(
             chat_id=user_id,
             text=message,
-            parse_mode=ParseMode.HTML,
-            reply_markup={
-                "inline_keyboard": [
-                    [{"text": "Открыть приложение", "web_app": {"url": MINI_APP_URL}}]
-                ]
-            }
+            parse_mode="HTML",
+            reply_markup=keyboard
         )
         logging.info(f"Sent notification to user {user_id}")
     except Exception as e:
@@ -51,6 +47,7 @@ async def check_habit_reminders(bot: Bot):
     db = SessionLocal()
     try:
         now_utc = datetime.utcnow()
+        now_msk = now_utc + timedelta(hours=3)
         
         # Find habits that need reminders
         stmt = (
@@ -66,12 +63,9 @@ async def check_habit_reminders(bot: Bot):
         habits_to_remind = db.execute(stmt).all()
         
         for habit, user in habits_to_remind:
-            # This is a naive implementation. A better approach would be to
-            # store user's timezone and convert reminder_time to UTC based on that.
-            # For now, we assume reminder_time is in the server's timezone (UTC).
             reminder_time_parts = list(map(int, habit.reminder_time.split(':')))
             
-            if now_utc.hour == reminder_time_parts[0] and now_utc.minute == reminder_time_parts[1]:
+            if now_msk.hour == reminder_time_parts[0] and now_msk.minute == reminder_time_parts[1]:
                 message = f"🔔 Пора выполнить привычку: <b>{habit.name}</b>"
                 await send_notification(bot, user.telegram_id, message)
 
@@ -92,10 +86,9 @@ async def check_habit_reminders(bot: Bot):
 
         for habit, participant, user in participants_to_remind:
             reminder_time_parts = list(map(int, participant.reminder_time.split(':')))
-            if now_utc.hour == reminder_time_parts[0] and now_utc.minute == reminder_time_parts[1]:
+            if now_msk.hour == reminder_time_parts[0] and now_msk.minute == reminder_time_parts[1]:
                 message = f"🔔 Пора выполнить привычку: <b>{habit.name}</b>"
                 await send_notification(bot, user.telegram_id, message)
-
 
     finally:
         db.close()
@@ -119,6 +112,9 @@ async def check_feed_notifications(bot: Bot):
         events_to_notify = db.execute(stmt).all()
         
         for event, recipient, recipient_telegram_id in events_to_notify:
+            if event.actor_id == recipient.id:
+                continue
+
             actor = db.query(User).filter(User.id == event.actor_id).first()
             habit = db.query(Habit).filter(Habit.id == event.habit_id).first()
             

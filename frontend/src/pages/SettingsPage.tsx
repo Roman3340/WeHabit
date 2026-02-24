@@ -38,10 +38,18 @@ function SettingsPage() {
     setShowDeleteConfirm(true)
   }
 
-  const handleDeleteConfirm = () => {
-    // Пока не реализовано — только предупреждение
-    alert('Удаление аккаунта пока недоступно. Все ваши данные будут безвозвратно удалены.')
-    setShowDeleteConfirm(false)
+  const handleDeleteConfirm = async () => {
+    try {
+      await profileApi.delete()
+      alert('Аккаунт успешно удален.')
+      // Можно добавить редирект или перезагрузку страницы
+      window.location.reload()
+    } catch (error) {
+      console.error('Failed to delete account:', error)
+      alert('Не удалось удалить аккаунт.')
+    } finally {
+      setShowDeleteConfirm(false)
+    }
   }
 
   return (

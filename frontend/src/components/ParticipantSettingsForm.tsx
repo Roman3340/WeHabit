@@ -76,7 +76,7 @@ function ParticipantSettingsForm({ onSubmit, initialData, allowedColors, onCance
             onChange={(e) => setReminderTime(e.target.value)}
             enterKeyHint="done"
           />
-          <span className="habit-form-time-zone">по вашему часовому поясу</span>
+          <span className="habit-form-time-zone">по московскому времени (МСК)</span>
         </div>
       )}
 

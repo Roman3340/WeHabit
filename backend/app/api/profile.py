@@ -32,3 +32,14 @@ async def update_profile(
     db.refresh(current_user)
     return current_user
 
+
+@router.delete("")
+async def delete_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Удалить профиль пользователя и все связанные данные."""
+    db.delete(current_user)
+    db.commit()
+    return {"message": "Account deleted successfully"}
+

@@ -198,5 +198,9 @@ export const profileApi = {
     const response = await api.put('/profile', data)
     return response.data
   },
+
+  delete: async (): Promise<void> => {
+    await api.delete('/profile')
+  },
 }
 

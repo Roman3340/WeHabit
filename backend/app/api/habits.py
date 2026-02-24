@@ -11,6 +11,7 @@ from app.schemas.habit import (
     Habit as HabitSchema,
     HabitCreate,
     HabitUpdate,
+    HabitParticipantUpdate,
     HabitLog as HabitLogSchema,
     HabitLogCreate,
 )
