@@ -128,7 +128,10 @@ function AchievementsPage() {
       </div>
       {loading ? (
         <div className="glass-card achievements-content">
-          <p className="achievements-placeholder">Загрузка…</p>
+          <div className="achievements-loader">
+            <div className="achievements-spinner" />
+            <span>Загрузка достижений…</span>
+          </div>
         </div>
       ) : (
         <div className="achievements-sections">

@@ -41,7 +41,7 @@
 .settings-option.active {
   border-color: rgba(212, 175, 55, 0.8);
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.1));
-  color: #fde047;
+  color: #000000;
 }
 
 .settings-select {

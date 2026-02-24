@@ -47,14 +47,23 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_schedule_description(habit: Habit) -> str:
     """Returns a human-readable schedule for a habit."""
-    if habit.frequency == 'daily':
-        return "Каждый день"
-    elif habit.frequency == 'weekly':
-        return f"{habit.weekly_goal_days} раз(а) в неделю"
-    elif habit.frequency == 'custom' and habit.days_of_week:
+    if habit.days_of_week:
         days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
-        selected_days = [days[i-1] for i in habit.days_of_week]
-        return ", ".join(selected_days)
+        valid_indexes = [i for i in habit.days_of_week if 1 <= i <= 7]
+        if set(valid_indexes) == {1, 2, 3, 4, 5, 6, 7}:
+            return "Каждый день"
+        selected_days = [days[i-1] for i in valid_indexes]
+        if selected_days:
+            return ", ".join(selected_days)
+
+    if habit.weekly_goal_days:
+        if habit.weekly_goal_days >= 7:
+            return "Каждый день"
+        return f"{habit.weekly_goal_days} из 7 дней"
+
+    if habit.frequency == "daily":
+        return "Каждый день"
+
     return "Нет расписания"
 
 async def send_notification(bot: Bot, user_id: int, message: str):
@@ -129,9 +138,11 @@ async def check_habit_reminders(bot: Bot):
             if not (user_time.hour == reminder_hour and user_time.minute == reminder_minute):
                 continue
 
-            if habit.frequency == 'custom' and habit.days_of_week and current_weekday not in habit.days_of_week:
+            # Schedule check
+            if habit.days_of_week and current_weekday not in habit.days_of_week:
                 continue
             
+            # Weekly goal check
             if habit.frequency == 'weekly' and habit.weekly_goal_days:
                 start_of_week = today - timedelta(days=today.weekday())
                 logs_this_week = db.query(HabitLog).filter(

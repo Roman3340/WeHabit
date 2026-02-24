@@ -166,3 +166,60 @@ async def get_habit_stats(
         "period_days": days
     }
 
+
+@router.get("/yearly")
+async def get_yearly_report(
+    year: int,
+    habit_id: UUID | None = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """Годовой отчёт по привычкам пользователя.
+
+    Возвращает список доступных лет и даты выполнений выбранной привычки за указанный год.
+    """
+    year_int = int(year)
+
+    # Все года, в которых у пользователя есть выполнения любых привычек
+    year_rows = (
+        db.query(func.extract("year", HabitLog.completed_at).label("y"))
+        .filter(HabitLog.user_id == current_user.id)
+        .group_by("y")
+        .order_by("y")
+        .all()
+    )
+    years = [int(row.y) for row in year_rows]
+
+    completed_dates: list[str] = []
+
+    if habit_id is not None:
+        habit = db.query(Habit).filter(Habit.id == habit_id).first()
+        if not habit:
+            raise HTTPException(status_code=404, detail="Habit not found")
+
+        # Проверка доступа
+        if habit.created_by != current_user.id:
+            participant = db.query(HabitParticipant).filter(
+                HabitParticipant.habit_id == habit_id,
+                HabitParticipant.user_id == current_user.id,
+                HabitParticipant.status == "accepted",
+            ).first()
+            if not participant:
+                raise HTTPException(status_code=403, detail="Access denied")
+
+        rows = (
+            db.query(func.date(HabitLog.completed_at).label("d"))
+            .filter(
+                HabitLog.habit_id == habit_id,
+                HabitLog.user_id == current_user.id,
+                func.extract("year", HabitLog.completed_at) == year_int,
+            )
+            .order_by("d")
+            .all()
+        )
+        completed_dates = [str(r.d) for r in rows]
+
+    return {
+        "years": years,
+        "completed_dates": completed_dates,
+    }

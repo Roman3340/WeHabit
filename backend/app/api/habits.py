@@ -197,6 +197,8 @@ async def create_habit(
         user_id=current_user.id,
         status="accepted",
         color=habit.color,
+        reminder_enabled=habit.reminder_enabled,
+        reminder_time=habit.reminder_time,
     )
     db.add(participant)
 
@@ -316,11 +318,23 @@ async def update_habit(
 
     old_color = getattr(habit, "color", None)
     update_data = habit_data.dict(exclude_unset=True)
+
     if update_data.get("reminder_enabled") and not current_user.habit_reminders_enabled:
         current_user.habit_reminders_enabled = True
         db.add(current_user)
 
+    if "days_of_week" in update_data and update_data["days_of_week"] is not None:
+        habit.days_of_week = update_data["days_of_week"]
+        habit.weekly_goal_days = None
+
+    if "weekly_goal_days" in update_data and update_data["weekly_goal_days"] is not None:
+        habit.weekly_goal_days = update_data["weekly_goal_days"]
+        if "days_of_week" not in update_data:
+            habit.days_of_week = None
+
     for field, value in update_data.items():
+        if field in {"days_of_week", "weekly_goal_days"}:
+            continue
         setattr(habit, field, value)
 
     db.commit()
@@ -332,6 +346,20 @@ async def update_habit(
             HabitParticipant.habit_id == habit_id,
             HabitParticipant.user_id == current_user.id,
         ).update({"color": new_color})
+        db.commit()
+
+    # Sync reminder settings to creator's participant record
+    if "reminder_enabled" in update_data or "reminder_time" in update_data:
+        update_fields = {}
+        if "reminder_enabled" in update_data:
+            update_fields["reminder_enabled"] = update_data["reminder_enabled"]
+        if "reminder_time" in update_data:
+            update_fields["reminder_time"] = update_data["reminder_time"]
+            
+        db.query(HabitParticipant).filter(
+            HabitParticipant.habit_id == habit_id,
+            HabitParticipant.user_id == current_user.id,
+        ).update(update_fields)
         db.commit()
 
     return await get_habit(habit_id, current_user, db)
@@ -526,23 +554,26 @@ async def complete_habit(
         habit_id=habit_id,
         event_type="completed",
     ))
+    
     if habit.is_shared:
         accepted = db.query(HabitParticipant).filter(
             HabitParticipant.habit_id == habit_id,
             HabitParticipant.status == "accepted",
         ).all()
+        
+        # Collect unique recipients to avoid duplicates
+        recipient_ids = set()
         for p in accepted:
-            if p.user_id == current_user.id:
-                continue
-            db.add(FeedEvent(
-                user_id=p.user_id,
-                actor_id=current_user.id,
-                habit_id=habit_id,
-                event_type="completed",
-            ))
+            if p.user_id != current_user.id:
+                recipient_ids.add(p.user_id)
+        
+        # Add creator if not already included (though they should be in accepted)
         if habit.created_by != current_user.id:
+            recipient_ids.add(habit.created_by)
+            
+        for recipient_id in recipient_ids:
             db.add(FeedEvent(
-                user_id=habit.created_by,
+                user_id=recipient_id,
                 actor_id=current_user.id,
                 habit_id=habit_id,
                 event_type="completed",

@@ -6,7 +6,6 @@ import './SettingsPage.css'
 function SettingsPage() {
   const navigate = useNavigate()
   const [firstDayOfWeek, setFirstDayOfWeek] = useState<'monday' | 'sunday'>('monday')
-  const [language, setLanguage] = useState('ru')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -81,17 +80,6 @@ function SettingsPage() {
               Воскресенье
             </button>
           </div>
-        </div>
-        <div className="settings-group">
-          <label className="settings-label">Язык</label>
-          <select
-            className="input settings-select"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
-          </select>
         </div>
         <div className="settings-group settings-danger">
           <button

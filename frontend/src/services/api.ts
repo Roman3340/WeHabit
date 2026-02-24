@@ -151,6 +151,17 @@ export const statsApi = {
     const response = await api.get(`/stats/habits/${habitId}?days=${days}`)
     return response.data
   },
+
+  getYearlyReport: async (
+    year: number,
+    habitId?: string
+  ): Promise<{ years: number[]; completed_dates: string[] }> => {
+    const params = new URLSearchParams()
+    params.set('year', String(year))
+    if (habitId) params.set('habit_id', habitId)
+    const response = await api.get(`/stats/yearly?${params.toString()}`)
+    return response.data
+  },
 }
 
 // Feed
