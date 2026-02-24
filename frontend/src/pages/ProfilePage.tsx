@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { profileApi } from '../services/api'
 import type { User } from '../types'
-import { TrophyIcon, FriendsIcon, BellIcon, SettingsIcon } from '../components/Icons'
+import { TrophyIcon, FriendsIcon, BellIcon, SettingsIcon, FeedIcon } from '../components/Icons'
 import './ProfilePage.css'
 
 const MENU_ITEMS = [
   { path: '/profile/achievements', label: 'Достижения', icon: <TrophyIcon width={22} height={22} /> },
-  { path: '/profile/yearly-report', label: 'Годовой отчёт', icon: <TrophyIcon width={22} height={22} /> },
+  { path: '/profile/yearly-report', label: 'Годовой отчёт', icon: <FeedIcon width={22} height={22} /> },
   { path: '/profile/friends', label: 'Друзья', icon: <FriendsIcon width={26} height={26} /> },
   { path: '/profile/notifications', label: 'Уведомления', icon: <BellIcon width={22} height={22} /> },
   { path: '/profile/settings', label: 'Настройки', icon: <SettingsIcon width={22} height={22} /> },

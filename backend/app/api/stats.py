@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from app.db.database import get_db
 from app.core.security import get_current_user
 from app.models import User, Habit, HabitLog, HabitParticipant
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 router = APIRouter()
 
@@ -170,7 +170,7 @@ async def get_habit_stats(
 @router.get("/yearly")
 async def get_yearly_report(
     year: int,
-    habit_id: UUID | None = None,
+    habit_id: Optional[UUID] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
