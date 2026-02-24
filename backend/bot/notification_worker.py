@@ -4,8 +4,8 @@ import time
 import asyncio
 from datetime import datetime, timedelta, date
 import logging
-from sqlalchemy import create_engine, select, and_
-from sqlalchemy.orm import sessionmaker, joinedload
+from sqlalchemy import create_engine, select, and_, func, or_
+from sqlalchemy.orm import sessionmaker, joinedload, Session
 from aiogram import Bot
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -16,7 +16,24 @@ from app.models.user import User
 from app.models.habit import Habit, HabitParticipant, HabitLog, FeedEvent
 from app.models.achievement import UserAchievement
 from app.core.config import settings
-from app.api.achievements import get_achievement_details
+
+# New function to get achievement details
+def get_achievement_details(achievement_type: str, tier: int) -> dict:
+    """Returns the name and emoji for an achievement."""
+    # This is a placeholder. In a real application, this would come from a config file or database.
+    achievements = {
+        "streak": {
+            1: {"name": "Начало положено", "emoji": "🔥"},
+            2: {"name": "Уже привычка", "emoji": "🔥🔥"},
+            3: {"name": "Мастер постоянства", "emoji": "🔥🔥🔥"},
+        },
+        "habit_invites": {
+            1: {"name": "Душа компании", "emoji": "🎉"},
+            2: {"name": "Массовик-затейник", "emoji": "🥳"},
+            3: {"name": "Лидер мнений", "emoji": "👑"},
+        }
+    }
+    return achievements.get(achievement_type, {}).get(tier, {"name": "Новое достижение", "emoji": "🏆"})
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -58,85 +75,89 @@ async def send_notification(bot: Bot, user_id: int, message: str):
         logging.error(f"Failed to send notification to user {user_id}: {e}")
         return False
 
+def calculate_streak(db: Session, habit_id: str, user_id: str) -> int:
+    """Calculates the current streak for a habit."""
+    logs = db.query(HabitLog.completed_at).filter(
+        HabitLog.habit_id == habit_id,
+        HabitLog.user_id == user_id
+    ).order_by(HabitLog.completed_at.desc()).all()
+
+    if not logs:
+        return 0
+
+    streak = 0
+    today = datetime.utcnow().date()
+    last_log_date = logs[0].completed_at.date()
+
+    # If the last log was today or yesterday, the streak is at least 1
+    if last_log_date == today or last_log_date == today - timedelta(days=1):
+        streak = 1
+        for i in range(len(logs) - 1):
+            if (logs[i].completed_at.date() - logs[i+1].completed_at.date()).days == 1:
+                streak += 1
+            else:
+                break
+    return streak
+
 async def check_habit_reminders(bot: Bot):
     """Checks for habit reminders and sends notifications."""
     db = SessionLocal()
     try:
         now_utc = datetime.utcnow()
         today = now_utc.date()
+        current_weekday = today.isoweekday()
 
-        # Base query for reminders
-        base_stmt = (
-            select(Habit, User)
+        reminders_query = (
+            select(Habit, User, HabitParticipant)
+            .join(HabitParticipant, Habit.id == HabitParticipant.habit_id)
+            .join(User, HabitParticipant.user_id == User.id)
             .where(
-                User.habit_reminders_enabled == True
+                User.habit_reminders_enabled == True,
+                HabitParticipant.reminder_enabled == True,
+                HabitParticipant.reminder_time != None,
+                HabitParticipant.status == 'accepted'
             )
         )
+        
+        potential_reminders = db.execute(reminders_query).all()
 
-        # Reminders for habit creators
-        creator_stmt = base_stmt.join(User, Habit.created_by == User.id).where(
-            Habit.reminder_enabled == True,
-            Habit.reminder_time != None
-        )
-        habits_to_remind = db.execute(creator_stmt).all()
-
-        # Reminders for habit participants
-        participant_stmt = base_stmt.join(HabitParticipant, Habit.id == HabitParticipant.habit_id).join(User, HabitParticipant.user_id == User.id).where(
-            HabitParticipant.reminder_enabled == True,
-            HabitParticipant.reminder_time != None,
-            HabitParticipant.status == 'accepted'
-        )
-        participants_to_remind = db.execute(participant_stmt.add_columns(HabitParticipant)).all()
-
-        all_reminders = []
-        for habit, user in habits_to_remind:
-            all_reminders.append((habit, user, habit.reminder_time))
-        for habit, user, participant in participants_to_remind:
-            all_reminders.append((habit, user, participant.reminder_time))
-
-        for habit, user, reminder_time_str in all_reminders:
-            # Naive timezone handling: assuming reminder_time is in user's local time,
-            # and we are checking against server's UTC time + 3 hours (MSK).
-            # A more robust solution would store user's timezone.
+        for habit, user, participant in potential_reminders:
+            reminder_time_str = participant.reminder_time
             user_time = now_utc + timedelta(hours=3) # Assuming MSK
             reminder_hour, reminder_minute = map(int, reminder_time_str.split(':'))
 
-            if user_time.hour == reminder_hour and user_time.minute == reminder_minute:
-                # Check if the habit was already completed today
-                log_exists = db.query(HabitLog).filter(
+            if not (user_time.hour == reminder_hour and user_time.minute == reminder_minute):
+                continue
+
+            if habit.frequency == 'custom' and habit.days_of_week and current_weekday not in habit.days_of_week:
+                continue
+            
+            if habit.frequency == 'weekly' and habit.weekly_goal_days:
+                start_of_week = today - timedelta(days=today.weekday())
+                logs_this_week = db.query(HabitLog).filter(
                     HabitLog.habit_id == habit.id,
                     HabitLog.user_id == user.id,
-                    func.date(HabitLog.completed_at) == today
-                ).first()
+                    HabitLog.completed_at >= start_of_week
+                ).count()
+                if logs_this_week >= habit.weekly_goal_days:
+                    continue
 
-                if not log_exists:
-                    # Calculate current streak
-                    # This is a simplified streak calculation. A real one would be more complex.
-                    logs = db.query(HabitLog).filter(
-                        HabitLog.habit_id == habit.id,
-                        HabitLog.user_id == user.id
-                    ).order_by(HabitLog.completed_at.desc()).all()
-                    
-                    streak = 0
-                    if logs:
-                        # Simple streak: count consecutive days from today backwards
-                        last_log_date = logs[0].completed_at.date()
-                        if last_log_date == today or last_log_date == today - timedelta(days=1):
-                           streak = 1
-                           for i in range(len(logs) - 1):
-                               if (logs[i].completed_at.date() - logs[i+1].completed_at.date()).days == 1:
-                                   streak += 1
-                               else:
-                                   break
-
-                    message = (
-                        f"🔔 Пора выполнить привычку: <b>{habit.name}</b>\n\n"
-                        f"💬 {habit.description or 'Нет описания'}\n"
-                        f"📆 {get_schedule_description(habit)}\n"
-                        f"🔥 Серия: {streak} дней"
-                    )
-                    await send_notification(bot, user.telegram_id, message)
-
+            log_exists_today = db.query(HabitLog).filter(
+                HabitLog.habit_id == habit.id,
+                HabitLog.user_id == user.id,
+                func.date(HabitLog.completed_at) == today
+            ).first()
+            if log_exists_today:
+                continue
+            
+            streak = calculate_streak(db, habit.id, user.id)
+            message = (
+                f"🔔 Пора выполнить привычку: <b>{habit.name}</b>\n\n"
+                f"💬 {habit.description or 'Нет описания'}\n"
+                f"📆 {get_schedule_description(habit)}\n"
+                f"🔥 Серия: {streak} дней"
+            )
+            await send_notification(bot, user.telegram_id, message)
     finally:
         db.close()
 
@@ -152,18 +173,18 @@ async def check_feed_notifications(bot: Bot):
                 joinedload(FeedEvent.actor),
                 joinedload(FeedEvent.habit)
             )
-            .join(User, FeedEvent.user_id == User.id)
-            .where(
-                FeedEvent.notification_sent == False,
-                User.feed_notifications_enabled == True
-            )
+            .where(FeedEvent.notification_sent == False)
         )
         
         events_to_notify = db.execute(stmt).scalars().all()
         
         for event in events_to_notify:
+            event.notification_sent = True
+
             if not event.actor or not event.user or event.actor_id == event.user_id:
-                event.notification_sent = True
+                continue
+            
+            if not event.user.feed_notifications_enabled:
                 continue
 
             actor_name = event.actor.first_name or event.actor.username
@@ -198,7 +219,13 @@ async def check_feed_notifications(bot: Bot):
                 ).strip()
             elif event.event_type == "invited":
                 message = (
-                    f"{actor_name} пригласил вас выполнять привычку<b>{habit_name}</b> вместе с ним!\n\n"
+                    f"👋 {actor_name} пригласил вас выполнять привычку<b>{habit_name}</b> вместе с ним!\n\n"
+                    f"{habit_desc}\n"
+                    f"{habit_schedule}"
+                ).strip()
+            elif event.event_type == "removed":
+                message = (
+                    f"🚫 {actor_name} удалил вас из привычки<b>{habit_name}</b>.\n\n"
                     f"{habit_desc}\n"
                     f"{habit_schedule}"
                 ).strip()
@@ -214,17 +241,9 @@ async def check_feed_notifications(bot: Bot):
                     message = f"🏆 {actor_name} получил(а) новое достижение: <b>{details['name']}</b> {tier_emoji}"
 
             if message:
-                if await send_notification(bot, event.user.telegram_id, message):
-                    event.notification_sent = True
-            else:
-                # Mark as sent even if no message was generated to avoid reprocessing
-                event.notification_sent = True
+                await send_notification(bot, event.user.telegram_id, message)
         
         db.commit()
-
-    except Exception as e:
-        logging.error(f"Error in check_feed_notifications: {e}")
-        db.rollback()
     finally:
         db.close()
 

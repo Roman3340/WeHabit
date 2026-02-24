@@ -184,6 +184,10 @@ async def create_habit(
         reminder_enabled=getattr(habit_data, "reminder_enabled", False) or False,
         reminder_time=getattr(habit_data, "reminder_time", None),
     )
+    if habit.reminder_enabled and not current_user.habit_reminders_enabled:
+        current_user.habit_reminders_enabled = True
+        db.add(current_user)
+
     db.add(habit)
     db.commit()
     db.refresh(habit)
@@ -207,6 +211,13 @@ async def create_habit(
                 status="pending",
             )
             db.add(participant)
+            # Create FeedEvent for the invited user
+            db.add(FeedEvent(
+                user_id=friend_id,
+                actor_id=current_user.id,
+                habit_id=habit.id,
+                event_type="invited",
+            ))
 
     db.commit()
     db.refresh(habit)
@@ -305,6 +316,10 @@ async def update_habit(
 
     old_color = getattr(habit, "color", None)
     update_data = habit_data.dict(exclude_unset=True)
+    if update_data.get("reminder_enabled") and not current_user.habit_reminders_enabled:
+        current_user.habit_reminders_enabled = True
+        db.add(current_user)
+
     for field, value in update_data.items():
         setattr(habit, field, value)
 
