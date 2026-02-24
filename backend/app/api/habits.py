@@ -142,6 +142,8 @@ async def get_habits(
                     "joined_at": p.joined_at,
                     "status": getattr(p, "status", "accepted"),
                     "color": getattr(p, "color", None),
+                    "reminder_enabled": getattr(p, "reminder_enabled", None),
+                    "reminder_time": getattr(p, "reminder_time", None),
                     "user": (lambda u: {
                         "id": u.id,
                         "username": u.username,
@@ -283,6 +285,8 @@ async def get_habit(
                 "joined_at": p.joined_at,
                 "status": getattr(p, "status", "accepted"),
                 "color": getattr(p, "color", None),
+                "reminder_enabled": getattr(p, "reminder_enabled", None),
+                "reminder_time": getattr(p, "reminder_time", None),
                 "user": (lambda u: {
                     "id": u.id,
                     "username": u.username,

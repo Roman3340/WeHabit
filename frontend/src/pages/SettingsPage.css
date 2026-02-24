@@ -39,9 +39,11 @@
 }
 
 .settings-option.active {
-  border-color: rgba(212, 175, 55, 0.8);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.1));
-  color: #000000;
+  border-color: rgba(212, 175, 55, 0.9);
+  background: linear-gradient(135deg, #c9a227, #b8860b);
+  color: #1a1a1a;
+  box-shadow: 0 12px 30px rgba(212, 175, 55, 0.35);
+  font-weight: 600;
 }
 
 .settings-select {
