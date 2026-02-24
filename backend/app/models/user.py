@@ -16,6 +16,8 @@ class User(Base):
     avatar_emoji = Column(String(10), default="👤")
     bio = Column(Text)
     first_day_of_week = Column(String(10), default="monday")  # monday | sunday
+    habit_reminders_enabled = Column(Boolean, default=True, nullable=False)
+    feed_notifications_enabled = Column(Boolean, default=True, nullable=False)
     referral_code = Column(String(32), unique=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -11,6 +11,8 @@ class UserBase(BaseModel):
     avatar_emoji: str = "👤"
     bio: Optional[str] = None
     first_day_of_week: Optional[str] = "monday"  # monday | sunday
+    habit_reminders_enabled: bool = True
+    feed_notifications_enabled: bool = True
 
 
 class UserCreate(UserBase):
@@ -24,6 +26,8 @@ class UserUpdate(BaseModel):
     avatar_emoji: Optional[str] = None
     bio: Optional[str] = None
     first_day_of_week: Optional[str] = None
+    habit_reminders_enabled: Optional[bool] = None
+    feed_notifications_enabled: Optional[bool] = None
 
 
 class User(UserBase):

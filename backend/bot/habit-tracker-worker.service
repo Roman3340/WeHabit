@@ -1,0 +1,14 @@
+[Unit]
+Description=Habit Tracker Notification Worker
+After=network.target
+
+[Service]
+User=YOUR_USER
+Group=YOUR_GROUP
+WorkingDirectory=/path/to/your/project/backend
+ExecStart=/path/to/your/project/venv/bin/python bot/notification_worker.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

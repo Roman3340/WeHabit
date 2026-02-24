@@ -287,6 +287,7 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
       </div>
       {reminderEnabled && (
         <div className="form-group habit-form-time-wrap">
+          <span className="habit-form-time-label">Ежедневно в</span>
           <input
             type="time"
             className="input habit-form-time-input"
@@ -294,6 +295,7 @@ function HabitForm({ onSubmit, initialData, submitLabel = 'Создать при
             onChange={(e) => setReminderTime(e.target.value)}
             enterKeyHint="done"
           />
+          <span className="habit-form-time-zone">по вашему часовому поясу</span>
         </div>
       )}
 

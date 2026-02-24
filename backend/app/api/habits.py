@@ -751,3 +751,51 @@ async def remove_habit_log(
     db.commit()
     return {"message": "Completion removed"}
 
+
+@router.put("/{habit_id}/participants/me", response_model=HabitSchema)
+async def update_my_participation(
+    habit_id: UUID,
+    data: HabitParticipantUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Обновить свои настройки в привычке (цвет, напоминание)."""
+    habit = db.query(Habit).filter(Habit.id == habit_id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    participant = db.query(HabitParticipant).filter(
+        HabitParticipant.habit_id == habit_id,
+        HabitParticipant.user_id == current_user.id,
+        HabitParticipant.status == "accepted",
+    ).first()
+    if not participant:
+        raise HTTPException(status_code=403, detail="You are not a participant of this habit")
+
+    update_data = data.dict(exclude_unset=True)
+
+    if "color" in update_data:
+        new_color = update_data["color"]
+        if new_color not in ALL_COLORS:
+            raise HTTPException(status_code=400, detail="Invalid color")
+        
+        used_colors = {
+            p.color for p in habit.participants 
+            if p.user_id != current_user.id and p.status == "accepted" and p.color
+        }
+        if new_color in used_colors:
+            raise HTTPException(status_code=400, detail="This color is already taken by another participant")
+        
+        participant.color = new_color
+
+    if "reminder_enabled" in update_data:
+        participant.reminder_enabled = update_data["reminder_enabled"]
+    
+    if "reminder_time" in update_data:
+        participant.reminder_time = update_data["reminder_time"]
+
+    db.commit()
+    db.refresh(participant)
+
+    return await get_habit(habit_id, current_user, db)
+

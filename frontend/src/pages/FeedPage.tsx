@@ -144,9 +144,11 @@ function FeedPage() {
           <p className="feed-empty">Пока нет событий. Добавьте друзей и ведите привычки вместе.</p>
         ) : (
           <div className="feed-list">
-            {grouped.entries.map(([dateKey, events]) => (
+            {grouped.entries.map(([dateKey, events], index) => (
               <div key={dateKey} className="feed-group">
-                <div className="feed-group-date">{formatDate(dateKey)}</div>
+                <div className="feed-group-date" style={{ borderTop: index === 0 ? 'none' : undefined }}>
+                  {formatDate(dateKey)}
+                </div>
                 <ul>
                   {events
                     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))

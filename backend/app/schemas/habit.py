@@ -32,6 +32,12 @@ class HabitUpdate(BaseModel):
     reminder_time: Optional[str] = None
 
 
+class HabitParticipantUpdate(BaseModel):
+    color: Optional[str] = None
+    reminder_enabled: Optional[bool] = None
+    reminder_time: Optional[str] = None
+
+
 class Habit(HabitBase):
     id: UUID
     created_by: UUID

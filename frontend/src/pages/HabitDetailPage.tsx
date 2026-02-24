@@ -5,6 +5,7 @@ import type { Habit, HabitStats, HabitColor } from '../types'
 import { getDayLabels, formatDateKey } from '../utils/week'
 import type { FirstDayOfWeek } from '../utils/week'
 import HabitForm, { type HabitFormData } from '../components/HabitForm'
+import ParticipantSettingsForm, { type ParticipantSettingsFormData } from '../components/ParticipantSettingsForm'
 import './HabitDetailPage.css'
 
 function SettingsIcon() {
@@ -46,6 +47,7 @@ function HabitDetailPage() {
   const [inviteFriends, setInviteFriends] = useState<Array<{ id: string; name: string; avatar: string }>>([])
   const [inviteSelected, setInviteSelected] = useState<string[]>([])
   const [profilePopup, setProfilePopup] = useState<{ userId: string; name: string; avatar: string; bio?: string } | null>(null)
+  const [me, setMe] = useState<User | null>(null)
 
   useEffect(() => {
     if (id) {
@@ -58,6 +60,7 @@ function HabitDetailPage() {
     const load = async () => {
       try {
         const profile = await profileApi.get()
+        setMe(profile)
         const fd = profile.first_day_of_week
         setFirstDay(fd === 'sunday' || fd === 'monday' ? fd : 'monday')
       } catch (e) {
@@ -167,6 +170,23 @@ function HabitDetailPage() {
     } catch (error) {
       console.error('Failed to update habit:', error)
       alert('Ошибка при обновлении привычки')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleParticipantSettingsSave = async (formData: ParticipantSettingsFormData) => {
+    if (!id) return
+    setSaving(true)
+    try {
+      await habitsApi.updateMyParticipation(id, formData)
+      await loadHabit()
+      await loadStats()
+      setEditing(false)
+      alert('Настройки обновлены!')
+    } catch (error) {
+      console.error('Failed to update participant settings:', error)
+      alert('Ошибка при обновлении настроек')
     } finally {
       setSaving(false)
     }
@@ -451,46 +471,74 @@ function HabitDetailPage() {
 
       {editing ? (
         <div className="habit-detail-card">
-          <div className="habit-detail-edit-header">
-            <h2>Редактировать привычку</h2>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setEditing(false)}
-              disabled={saving}
-            >
-              Отмена
-            </button>
-          </div>
-          <HabitForm
-            onSubmit={handleEdit}
-            submitLabel="Сохранить изменения"
-            initialData={{
-              name: habit.name,
-              description: habit.description,
-              frequency: habit.frequency,
-              is_shared: habit.is_shared,
-              color: habit.color || 'gold',
-              days_of_week: habit.days_of_week,
-              weekly_goal_days: habit.weekly_goal_days,
-              reminder_enabled: habit.reminder_enabled,
-              reminder_time: habit.reminder_time,
-            }}
-            excludeUserIds={(habit.participants || []).map((p) => p.id)}
-            allowedColors={(() => {
-              if (!habit.is_shared) return undefined
-              // Владелец не может выбирать цвета, занятые другими участниками (accepted)
-              const usedByOthers = new Set<HabitColor>()
-              ;(habit.participants || []).forEach((p) => {
-                if (p.id !== habit.created_by && p.status === 'accepted' && p.color) {
-                  usedByOthers.add(p.color as HabitColor)
-                }
-              })
-              const ALL: HabitColor[] = ['gray', 'silver', 'gold', 'emerald', 'sapphire', 'ruby']
-              const allowed = ALL.filter((c) => !usedByOthers.has(c))
-              return allowed.length ? allowed : []
-            })()}
-          />
+          {habit.can_edit ? (
+            <>
+              <div className="habit-detail-edit-header">
+                <h2>Редактировать привычку</h2>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setEditing(false)}
+                  disabled={saving}
+                >
+                  Отмена
+                </button>
+              </div>
+              <HabitForm
+                onSubmit={handleEdit}
+                submitLabel="Сохранить изменения"
+                initialData={{
+                  name: habit.name,
+                  description: habit.description,
+                  frequency: habit.frequency,
+                  is_shared: habit.is_shared,
+                  color: habit.color || 'gold',
+                  days_of_week: habit.days_of_week,
+                  weekly_goal_days: habit.weekly_goal_days,
+                  reminder_enabled: habit.reminder_enabled,
+                  reminder_time: habit.reminder_time,
+                }}
+                excludeUserIds={(habit.participants || []).map((p) => p.id)}
+                allowedColors={(() => {
+                  if (!habit.is_shared) return undefined
+                  const usedByOthers = new Set<HabitColor>()
+                  ;(habit.participants || []).forEach((p) => {
+                    if (p.id !== habit.created_by && p.status === 'accepted' && p.color) {
+                      usedByOthers.add(p.color as HabitColor)
+                    }
+                  })
+                  const ALL: HabitColor[] = ['gray', 'silver', 'gold', 'emerald', 'sapphire', 'ruby']
+                  const allowed = ALL.filter((c) => !usedByOthers.has(c))
+                  return allowed.length ? allowed : []
+                })()}
+              />
+            </>
+          ) : (
+            <>
+              <div className="habit-detail-edit-header">
+                <h2>Настройки привычки</h2>
+              </div>
+              <ParticipantSettingsForm
+                onSubmit={handleParticipantSettingsSave}
+                onCancel={() => setEditing(false)}
+                initialData={{
+                  color: habit.participants?.find(p => p.id === me?.id)?.color || 'gold',
+                  reminder_enabled: habit.participants?.find(p => p.id === me?.id)?.reminder_enabled,
+                  reminder_time: habit.participants?.find(p => p.id === me?.id)?.reminder_time,
+                }}
+                allowedColors={(() => {
+                  const usedByOthers = new Set<HabitColor>()
+                  ;(habit.participants || []).forEach((p) => {
+                    if (p.id !== me?.id && p.status === 'accepted' && p.color) {
+                      usedByOthers.add(p.color as HabitColor)
+                    }
+                  })
+                  const ALL: HabitColor[] = ['gray', 'silver', 'gold', 'emerald', 'sapphire', 'ruby']
+                  return ALL.filter((c) => !usedByOthers.has(c))
+                })()}
+              />
+            </>
+          )}
         </div>
       ) : (
         <div className={`habit-detail-card habit-detail-card--${habit.color || 'gold'}`}>
@@ -504,6 +552,16 @@ function HabitDetailPage() {
                 className="habit-detail-edit-icon"
                 onClick={() => setEditing(true)}
                 title="Редактировать привычку"
+              >
+                <SettingsIcon />
+              </button>
+            )}
+            {!habit.can_edit && habit.is_shared && (
+              <button
+                type="button"
+                className="habit-detail-edit-icon"
+                onClick={() => setEditing(true)}
+                title="Настроить привычку"
               >
                 <SettingsIcon />
               </button>
@@ -763,7 +821,7 @@ function HabitDetailPage() {
             <h3 className="habit-cell-popup-title">{profilePopup.name}</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
               <div style={{ fontSize: 28 }}>{profilePopup.avatar}</div>
-              <div style={{ color: 'var(--text-muted)' }}>{profilePopup.bio || 'Без описания'}</div>
+              {profilePopup.bio && <div style={{ color: 'var(--text-muted)' }}>{profilePopup.bio}</div>}
             </div>
             {habit.can_edit && profilePopup.userId !== habit.created_by && (
               <button className="btn btn-secondary" onClick={() => handleRemoveParticipant(profilePopup.userId)}>

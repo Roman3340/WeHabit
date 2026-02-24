@@ -226,10 +226,24 @@
 .habit-form-time-wrap {
   margin-top: -8px;
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.habit-form-time-label {
+  font-size: 0.95rem;
+  color: var(--text-primary);
 }
 
 .habit-form-time-input {
-  max-width: 140px;
+  max-width: 120px;
+  flex-shrink: 0;
+}
+
+.habit-form-time-zone {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .habit-form-row {

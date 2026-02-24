@@ -93,29 +93,21 @@
 }
 
 .ach-medal--bronze {
-  background: radial-gradient(circle at 20% 0%, #f4d2b3 0, #c47a3a 35%, #8a4621 70%, #3b2214 100%);
+  background: radial-gradient(circle at 20% 0%, #d1a78a 0, #a16e3a 35%, #6d3f1a 70%, #3a1f0f 100%);
 }
 .ach-medal--gold {
-  background: radial-gradient(circle at 20% 0%, #fff9c7 0, #f4d35e 35%, #c29b28 70%, #4b3b18 100%);
+  background: radial-gradient(circle at 20% 0%, #f7e8a9 0, #e0c550 35%, #b08e20 70%, #4b3b18 100%);
 }
 .ach-medal--diamond {
   background:
-    radial-gradient(circle at 15% 0%, #e0f7ff 0, #b9ecff 20%, transparent 50%),
-    radial-gradient(circle at 85% 20%, #eaf5ff 0, #c3e4ff 24%, transparent 55%),
-    linear-gradient(135deg, #4fd1c5, #0f6ab4 45%, #111827 100%);
+    radial-gradient(circle at 15% 0%, #d0e7ff 0, #a9d7ff 20%, transparent 50%),
+    radial-gradient(circle at 85% 20%, #dcefff 0, #b3d9ff 24%, transparent 55%),
+    linear-gradient(135deg, #4a9ac2 0%, #0f5a9a 45%, #111827 100%);
 }
 
 .ach-medal-num {
   color: #e6e6e6;
   font-size: 28px;
-  margin-bottom: 4px;
-}
-
-.ach-medal-name-mini {
-  font-size: 10px;
-  color: rgba(241,245,249,0.88);
-  text-align: center;
-  padding: 0 4px;
 }
 
 .ach-medal-large {

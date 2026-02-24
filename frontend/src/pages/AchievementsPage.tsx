@@ -89,12 +89,11 @@ function AchievementsPage() {
     tiers: Array<{ tier: number; label: string; color: 'bronze' | 'gold' | 'diamond' }>
   ) => {
     return (
-      <div className="ach-block glass-card" key={type}>
+      <div className="ach-block" key={type}>
         <div className="ach-block-title">{title}</div>
         <div className="ach-block-grid">
           {tiers.map((t) => {
             const isEarned = (earned[type] || []).includes(t.tier)
-            const meta = getMeta(type, t.tier)
             return (
               <button
                 key={t.tier}
@@ -111,7 +110,6 @@ function AchievementsPage() {
                 }}
               >
                 <span className="ach-medal-num">{t.label}</span>
-                <span className="ach-medal-name-mini">{meta.title}</span>
               </button>
             )
           })}

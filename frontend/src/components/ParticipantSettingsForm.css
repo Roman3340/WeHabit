@@ -1,0 +1,17 @@
+.participant-settings-form {
+  padding: 8px 0 0;
+}
+
+.participant-settings-form .form-group {
+  margin-bottom: 20px;
+}
+
+.participant-settings-form .form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.participant-settings-form .form-actions .btn {
+  flex: 1;
+}

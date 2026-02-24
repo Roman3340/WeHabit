@@ -113,6 +113,15 @@ export const habitsApi = {
   declineInvitation: async (id: string): Promise<void> => {
     await api.post(`/habits/${id}/invitation/decline`)
   },
+
+  updateMyParticipation: async (id: string, data: {
+    color?: string
+    reminder_enabled?: boolean
+    reminder_time?: string
+  }): Promise<Habit> => {
+    const response = await api.put(`/habits/${id}/participants/me`, data)
+    return response.data
+  },
 }
 
 // Friends
@@ -183,6 +192,8 @@ export const profileApi = {
     avatar_emoji?: string
     bio?: string
     first_day_of_week?: string
+    habit_reminders_enabled?: boolean
+    feed_notifications_enabled?: boolean
   }): Promise<User> => {
     const response = await api.put('/profile', data)
     return response.data

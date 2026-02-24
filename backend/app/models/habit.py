@@ -40,6 +40,8 @@ class HabitParticipant(Base):
     joined_at = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(String(20), default="accepted")
     color = Column(String(20))
+    reminder_enabled = Column(Boolean, default=False)
+    reminder_time = Column(String(5))  # HH:MM
 
     habit = relationship("Habit", back_populates="participants")
     user = relationship("User")

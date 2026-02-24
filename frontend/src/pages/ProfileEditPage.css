@@ -31,14 +31,14 @@
 }
 
 .emoji-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
   gap: 8px;
 }
 
 .emoji-option {
-  width: 52px;
-  height: 52px;
+  aspect-ratio: 1 / 1;
+  height: auto;
   flex-shrink: 0;
   border-radius: 12px;
   border: 2px solid transparent;
