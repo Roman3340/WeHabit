@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = "7758408519:AAFIxgU5jgyjaORfsUne9rpIdYaPyT6E69s"
     TELEGRAM_BOT_USERNAME: str = "wehabit_bot"
     TELEGRAM_MINIAPP_DEEPLINK: str = "https://t.me/wehabit_bot/friends"  # например: https://t.me/<bot_username>/<app_shortname>
+    TELEGRAM_MINIAPP_LINK: str = "https://roman3340.github.io/WeHabit/"
     
     # CORS
     CORS_ORIGINS: List[str] = ["*"]

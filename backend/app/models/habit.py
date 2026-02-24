@@ -91,6 +91,7 @@ class FeedEvent(Base):
     # Тип события: invited | joined | declined | left | completed
     event_type = Column(String(32), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    notification_sent = Column(Boolean, default=False, nullable=False)
 
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
