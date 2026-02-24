@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { habitsApi, statsApi, friendsApi, profileApi } from '../services/api'
 import type { Habit, HabitStats, HabitColor, User } from '../types'
-import { formatDateKey, getDayLabels } from '../utils/date'
+import { formatDateKey, getDayLabels } from '../utils/week'
 import type { FirstDayOfWeek } from '../utils/week'
 import HabitForm, { type HabitFormData } from '../components/HabitForm'
 import ParticipantSettingsForm, { type ParticipantSettingsFormData } from '../components/ParticipantSettingsForm'
@@ -612,7 +612,7 @@ function HabitDetailPage() {
             <div className="habit-detail-calendar">
               <div className="habit-calendar-month-label">{monthLabel}</div>
               <div className="habit-calendar-header">
-                {dayLabels.map((l, i) => (
+                {dayLabels.map((l: string, i: number) => (
                   <span key={i} className="habit-calendar-day-label">{l}</span>
                 ))}
               </div>
