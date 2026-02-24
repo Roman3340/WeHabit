@@ -8,6 +8,8 @@ export interface User {
   bio?: string
   /** monday | sunday — первый день недели в календаре */
   first_day_of_week?: string
+  habit_reminders_enabled?: boolean
+  feed_notifications_enabled?: boolean
   created_at: string
   updated_at: string
 }
@@ -33,6 +35,8 @@ export interface Habit {
     joined_at: string
     status?: string
     color?: HabitColor
+    reminder_enabled?: boolean
+    reminder_time?: string
     user?: {
       id: string
       username?: string

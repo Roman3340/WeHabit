@@ -3,10 +3,14 @@ Description=Habit Tracker Notification Worker
 After=network.target
 
 [Service]
-User=YOUR_USER
-Group=YOUR_GROUP
-WorkingDirectory=/path/to/your/project/backend
-ExecStart=/path/to/your/project/venv/bin/python bot/notification_worker.py
+# Для единообразия с habit-tracker.service, используется root.
+# В целях безопасности рекомендуется создать отдельного пользователя
+# и указать его здесь, например:
+# User=your_app_user
+# Group=your_app_user
+User=root
+WorkingDirectory=/root/habits_tracker/backend
+ExecStart=/root/habits_tracker/backend/venv/bin/python bot/notification_worker.py
 Restart=always
 RestartSec=10
 
