@@ -5,6 +5,9 @@
 .yearly-controls {
   padding: var(--space-lg);
   margin-bottom: var(--space-lg);
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .yearly-row {
@@ -48,21 +51,15 @@
 .yearly-month-title {
   font-size: 0.9rem;
   color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.yearly-month-grid {
-  border-radius: 12px;
-  padding: 10px;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.24);
+  margin-bottom: 6px;
+  text-align: center;
 }
 
 .yearly-weekday-row,
 .yearly-week-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 4px;
 }
 
 .yearly-weekday-row {
@@ -78,7 +75,12 @@
 .yearly-day {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
 }
 
 .yearly-day.empty {
@@ -86,7 +88,7 @@
 }
 
 .yearly-day.idle {
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .yearly-day.done {
@@ -113,9 +115,12 @@
   background: #f97316;
 }
 
+.yearly-day-num {
+  color: var(--text-primary);
+}
+
 @media (max-width: 640px) {
   .yearly-calendars {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
-

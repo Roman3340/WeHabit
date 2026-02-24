@@ -183,35 +183,35 @@ function YearlyReportPage() {
         {months.map((month, idx) => (
           <div key={month.monthIndex} className="yearly-month">
             <div className="yearly-month-title">{month.label}</div>
-            <div className="yearly-month-grid">
-              <div className="yearly-weekday-row">
-                {dayLabels.map((label) => (
-                  <span key={label} className="yearly-weekday">
-                    {label[0]}
-                  </span>
-                ))}
-              </div>
-              {month.weeks.map((week, wi) => (
-                <div key={wi} className="yearly-week-row">
-                  {week.map((day, di) => {
-                    if (!day) {
-                      return <div key={di} className="yearly-day empty" />
-                    }
-                    const y = day.getFullYear()
-                    const m = String(day.getMonth() + 1).padStart(2, '0')
-                    const d = String(day.getDate()).padStart(2, '0')
-                    const key = `${y}-${m}-${d}`
-                    const done = completedSet.has(key)
-                    return (
-                      <div
-                        key={di}
-                        className={`yearly-day ${done ? 'done' : 'idle'} month-${(idx % 6) + 1}`}
-                      />
-                    )
-                  })}
-                </div>
+            <div className="yearly-weekday-row">
+              {dayLabels.map((label) => (
+                <span key={label} className="yearly-weekday">
+                  {label[0]}
+                </span>
               ))}
             </div>
+            {month.weeks.map((week, wi) => (
+              <div key={wi} className="yearly-week-row">
+                {week.map((day, di) => {
+                  if (!day) {
+                    return <div key={di} className="yearly-day empty" />
+                  }
+                  const y = day.getFullYear()
+                  const m = String(day.getMonth() + 1).padStart(2, '0')
+                  const d = String(day.getDate()).padStart(2, '0')
+                  const key = `${y}-${m}-${d}`
+                  const done = completedSet.has(key)
+                  return (
+                    <div
+                      key={di}
+                      className={`yearly-day ${done ? 'done' : 'idle'} month-${(idx % 6) + 1}`}
+                    >
+                      <span className="yearly-day-num">{Number(d)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -220,4 +220,3 @@ function YearlyReportPage() {
 }
 
 export default YearlyReportPage
-
