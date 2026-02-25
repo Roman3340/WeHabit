@@ -417,6 +417,9 @@ function HabitDetailPage() {
     }
     setInviteLoading(true)
     try {
+      if (!habit.is_shared) {
+        await habitsApi.update(id, { is_shared: true })
+      }
       await habitsApi.invite(id, inviteSelected)
       setInviteModalOpen(false)
       await loadHabit()
