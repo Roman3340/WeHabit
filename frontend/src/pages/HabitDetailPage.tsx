@@ -541,7 +541,11 @@ function HabitDetailPage() {
           )}
         </div>
       ) : (
-        <div className={`habit-detail-card habit-detail-card--${habit.color || 'gold'}`}>
+        <div
+          className={`habit-detail-card habit-detail-card--${
+            habit.participants?.find((p) => p.id === me?.id)?.color || habit.color || 'gold'
+          }`}
+        >
           <div className="habit-detail-title">
             <div className="habit-detail-title-text">
               <h1>{habit.name}</h1>

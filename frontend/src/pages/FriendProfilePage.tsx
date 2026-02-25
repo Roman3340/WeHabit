@@ -11,6 +11,11 @@ function FriendProfilePage() {
   const [achievements, setAchievements] = useState<Array<{ type: string; tier: number; created_at?: string }>>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<{ type: string; tier: number; created_at?: string } | null>(null)
+  const medalImages = import.meta.glob('../achievement/*.png', { as: 'url', eager: true }) as Record<string, string>
+  const getMedalSrc = (color: 'bronze' | 'silver' | 'gold', label: string) => {
+    const key = `../achievement/${color}_${label}.png`
+    return medalImages[key]
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -79,8 +84,8 @@ function FriendProfilePage() {
         ) : (
           <div className="friend-ach-grid">
             {achievements.map((a) => {
-              const color: 'bronze' | 'gold' | 'diamond' =
-                a.tier === 1 ? 'bronze' : a.tier === 2 ? 'gold' : 'diamond'
+              const color: 'bronze' | 'silver' | 'gold' =
+                a.tier === 1 ? 'bronze' : a.tier === 2 ? 'silver' : 'gold'
               const label =
                 a.type === 'total_days'
                   ? a.tier === 1
@@ -111,7 +116,7 @@ function FriendProfilePage() {
                 <button
                   key={`${a.type}-${a.tier}`}
                   type="button"
-                  className={`ach-medal ach-medal--${color} achieved friend-ach-medal`}
+                  className={`ach-medal achieved friend-ach-medal`}
                   onClick={() =>
                     setSelected({
                       type: a.type,
@@ -120,7 +125,14 @@ function FriendProfilePage() {
                     })
                   }
                 >
-                  <span className="ach-medal-num">{label}</span>
+                  {(() => {
+                    const src = getMedalSrc(color, label)
+                    return src ? (
+                      <img className="ach-medal-img" src={src} alt={`${color} ${label}`} />
+                    ) : (
+                      <span className="ach-medal-num">{label}</span>
+                    )
+                  })()}
                 </button>
               )
             })}
@@ -150,8 +162,8 @@ function FriendProfilePage() {
             {(() => {
               const type = selected.type
               const tier = selected.tier
-              const color: 'bronze' | 'gold' | 'diamond' =
-                tier === 1 ? 'bronze' : tier === 2 ? 'gold' : 'diamond'
+              const color: 'bronze' | 'silver' | 'gold' =
+                tier === 1 ? 'bronze' : tier === 2 ? 'silver' : 'gold'
               let title = 'Достижение'
               let description = ''
               if (type === 'total_days') {
@@ -194,39 +206,72 @@ function FriendProfilePage() {
                     year: 'numeric',
                   })}`
                 : ''
+              const src = (() => {
+                const lbl =
+                  type === 'total_days'
+                    ? tier === 1
+                      ? '7'
+                      : tier === 2
+                        ? '14'
+                        : '21'
+                    : type === 'friends_count'
+                      ? tier === 1
+                        ? '3'
+                        : tier === 2
+                          ? '7'
+                          : '10'
+                      : type === 'streak'
+                        ? tier === 1
+                          ? '5'
+                          : tier === 2
+                            ? '15'
+                            : '30'
+                        : type === 'habit_invites'
+                          ? tier === 1
+                            ? '1'
+                            : tier === 2
+                              ? '3'
+                              : '5'
+                          : ''
+                return lbl ? getMedalSrc(color, lbl) : undefined
+              })()
               return (
                 <>
                   <h2 className="ach-modal-title">{title}</h2>
                   <div className="ach-modal-medal-wrap">
-                    <div className={`ach-medal ach-medal--${color} ach-medal-large achieved`}>
-                      <span className="ach-medal-num">
-                        {type === 'total_days'
-                          ? tier === 1
-                            ? '7'
-                            : tier === 2
-                              ? '14'
-                              : '21'
-                          : type === 'friends_count'
+                    {src ? (
+                      <img className="ach-medal-img ach-medal-large achieved" src={src} alt={`${color}`} />
+                    ) : (
+                      <div className="ach-medal ach-medal-large achieved">
+                        <span className="ach-medal-num">
+                          {type === 'total_days'
                             ? tier === 1
-                              ? '3'
+                              ? '7'
                               : tier === 2
-                                ? '7'
-                                : '10'
-                            : type === 'streak'
+                                ? '14'
+                                : '21'
+                            : type === 'friends_count'
                               ? tier === 1
-                                ? '5'
+                                ? '3'
                                 : tier === 2
-                                  ? '15'
-                                  : '30'
-                              : type === 'habit_invites'
+                                  ? '7'
+                                  : '10'
+                              : type === 'streak'
                                 ? tier === 1
-                                  ? '1'
+                                  ? '5'
                                   : tier === 2
-                                    ? '3'
-                                    : '5'
-                                : ''}
-                      </span>
-                    </div>
+                                    ? '15'
+                                    : '30'
+                                : type === 'habit_invites'
+                                  ? tier === 1
+                                    ? '1'
+                                    : tier === 2
+                                      ? '3'
+                                      : '5'
+                                  : ''}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <p className="ach-modal-description">{description}</p>
                   {dateText && <p className="ach-modal-date">{dateText}</p>}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import type { Habit, HabitColor } from '../types'
 import { habitsApi } from '../services/api'
 import { formatDateKey } from '../utils/week'
@@ -34,16 +35,22 @@ interface HabitCardProps {
   habit: Habit
   onQuickToggle?: (updated: Habit | null) => void
   onRefreshHabits?: () => void
+  myUserId?: string
 }
 
-function HabitCard({ habit, onQuickToggle, onRefreshHabits }: HabitCardProps) {
+function HabitCard({ habit, onQuickToggle, onRefreshHabits, myUserId }: HabitCardProps) {
   const navigate = useNavigate()
   const isInvitation = habit.is_invited === true
+  const myParticipantColor = habit.participants?.find(
+    (p) => p.id === myUserId && p.status === 'accepted'
+  )?.color as HabitColor | undefined
   const colorClass = isInvitation
     ? 'habit-card--gold'
-    : habit.color && COLOR_CLASS[habit.color]
-      ? COLOR_CLASS[habit.color]
-      : 'habit-card--gold'
+    : myParticipantColor && COLOR_CLASS[myParticipantColor]
+      ? COLOR_CLASS[myParticipantColor]
+      : habit.color && COLOR_CLASS[habit.color]
+        ? COLOR_CLASS[habit.color]
+        : 'habit-card--gold'
 
   const ALL_COLORS: HabitColor[] = ['gray', 'silver', 'gold', 'emerald', 'sapphire', 'ruby']
   const [inviteLoading, setInviteLoading] = useState(false)
@@ -219,9 +226,8 @@ function HabitCard({ habit, onQuickToggle, onRefreshHabits }: HabitCardProps) {
           {!isInvitation && (
             <div className="habit-streak" title="Серия дней подряд">
               <span className="habit-streak-icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2c1.2 2.1 3.5 4 3.5 7 0 2.1-1.6 3.5-3.5 3.5S8.5 11.1 8.5 9c0-1.9 1-3.4 1.9-4.6" />
-                  <path d="M12 22c4.1 0 7-3.1 7-7 0-2.5-1.2-4.6-3.1-6.1.1 2.6-1.6 4.1-3.9 4.1S8.1 11.5 8 8.9C6.2 10.4 5 12.5 5 15c0 3.9 2.9 7 7 7z" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.5 2.5c1.8 2.3 3.8 4.3 3.8 7.3 0 3.4-2.6 5.7-5.8 5.7S4.7 13.2 4.7 9.8c0-2.5 1.3-4.6 3.2-6.1-.1 2.6 1.6 4.1 3.9 4.1 2.3 0 4-1.5 3.9-4.1 2 1.5 3.2 3.6 3.2 6.1 0 4.4-3.5 8-8 8s-8-3.6-8-8c0-2.9 1.6-5.4 4-6.9C8.9 5.6 10.4 7.2 10.4 9.4c0 1.9-1.4 3.3-3.2 3.3 1.2 1.6 3.1 2.6 5.3 2.6 3.3 0 6-2.3 6-5.4 0-3.1-1.9-5.1-3.8-7.6z" />
                 </svg>
               </span>
               <span className="habit-streak-number">{streak}</span>
@@ -251,41 +257,43 @@ function HabitCard({ habit, onQuickToggle, onRefreshHabits }: HabitCardProps) {
           </div>
         )}
       </div>
-      {showColorModal && (
-        <div className="habit-cell-popup-overlay" onClick={() => setShowColorModal(false)}>
-          <div className="habit-cell-popup glass-card" onClick={(e) => e.stopPropagation()}>
-            <h3 className="habit-cell-popup-title">Выберите свой цвет</h3>
-            <div className="habit-form-colors" style={{ marginBottom: '12px' }}>
-              {availableColors.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`habit-form-color-btn habit-form-color-btn--${c} ${selectedColor === c ? 'active' : ''}`}
-                  onClick={() => setSelectedColor(c)}
-                />
-              ))}
-              {availableColors.length === 0 && (
-                <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Нет доступных цветов</div>
-              )}
+      {showColorModal &&
+        createPortal(
+          <div className="habit-cell-popup-overlay" onClick={() => setShowColorModal(false)}>
+            <div className="habit-cell-popup glass-card" onClick={(e) => e.stopPropagation()}>
+              <h3 className="habit-cell-popup-title">Выберите свой цвет</h3>
+              <div className="habit-form-colors" style={{ marginBottom: '12px' }}>
+                {availableColors.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`habit-form-color-btn habit-form-color-btn--${c} ${selectedColor === c ? 'active' : ''}`}
+                    onClick={() => setSelectedColor(c)}
+                  />
+                ))}
+                {availableColors.length === 0 && (
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Нет доступных цветов</div>
+                )}
+              </div>
+              <button
+                type="button"
+                className="btn btn-success"
+                disabled={!selectedColor || inviteLoading}
+                onClick={handleAcceptSave}
+              >
+                Сохранить
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary habit-cell-popup-close"
+                onClick={() => setShowColorModal(false)}
+              >
+                Отмена
+              </button>
             </div>
-            <button
-              type="button"
-              className="btn btn-success"
-              disabled={!selectedColor || inviteLoading}
-              onClick={handleAcceptSave}
-            >
-              Сохранить
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary habit-cell-popup-close"
-              onClick={() => setShowColorModal(false)}
-            >
-              Отмена
-            </button>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

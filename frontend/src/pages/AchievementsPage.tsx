@@ -8,6 +8,11 @@ function AchievementsPage() {
   const [items, setItems] = useState<Array<{ id: string; type: string; tier: number; created_at: string }>>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<{ type: string; tier: number; created_at?: string } | null>(null)
+  const medalImages = import.meta.glob('../achievement/*.png', { as: 'url', eager: true }) as Record<string, string>
+  const getMedalSrc = (color: 'bronze' | 'silver' | 'gold', label: string) => {
+    const key = `../achievement/${color}_${label}.png`
+    return medalImages[key]
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -86,7 +91,7 @@ function AchievementsPage() {
   const block = (
     title: string,
     type: string,
-    tiers: Array<{ tier: number; label: string; color: 'bronze' | 'gold' | 'diamond' }>
+    tiers: Array<{ tier: number; label: string; color: 'bronze' | 'silver' | 'gold' }>
   ) => {
     return (
       <div className="ach-block" key={type}>
@@ -98,7 +103,7 @@ function AchievementsPage() {
               <button
                 key={t.tier}
                 type="button"
-                className={`ach-medal ach-medal--${t.color} ${isEarned ? 'achieved' : 'locked'}`}
+                className={`ach-medal ${isEarned ? 'achieved' : 'locked'}`}
                 title={isEarned ? 'Получено' : 'Не получено'}
                 onClick={() => {
                   const found = items.find((it) => it.type === type && it.tier === t.tier)
@@ -109,7 +114,14 @@ function AchievementsPage() {
                   })
                 }}
               >
-                <span className="ach-medal-num">{t.label}</span>
+                {(() => {
+                  const src = getMedalSrc(t.color, t.label)
+                  return src ? (
+                    <img className="ach-medal-img" src={src} alt={`${t.color} ${t.label}`} />
+                  ) : (
+                    <span className="ach-medal-num">{t.label}</span>
+                  )
+                })()}
               </button>
             )
           })}
@@ -137,23 +149,23 @@ function AchievementsPage() {
         <div className="achievements-sections">
           {block('Выполняй привычку регулярно', 'total_days', [
             { tier: 1, label: '7', color: 'bronze' },
-            { tier: 2, label: '14', color: 'gold' },
-            { tier: 3, label: '21', color: 'diamond' },
+            { tier: 2, label: '14', color: 'silver' },
+            { tier: 3, label: '21', color: 'gold' },
           ])}
           {block('Приглашай друзей', 'friends_count', [
             { tier: 1, label: '3', color: 'bronze' },
-            { tier: 2, label: '7', color: 'gold' },
-            { tier: 3, label: '10', color: 'diamond' },
+            { tier: 2, label: '7', color: 'silver' },
+            { tier: 3, label: '10', color: 'gold' },
           ])}
           {block('Держи серию в привычке', 'streak', [
             { tier: 1, label: '5', color: 'bronze' },
-            { tier: 2, label: '15', color: 'gold' },
-            { tier: 3, label: '30', color: 'diamond' },
+            { tier: 2, label: '15', color: 'silver' },
+            { tier: 3, label: '30', color: 'gold' },
           ])}
           {block('Веди привычки с друзьями', 'habit_invites', [
             { tier: 1, label: '1', color: 'bronze' },
-            { tier: 2, label: '3', color: 'gold' },
-            { tier: 3, label: '5', color: 'diamond' },
+            { tier: 2, label: '3', color: 'silver' },
+            { tier: 3, label: '5', color: 'gold' },
           ])}
         </div>
       )}
@@ -162,48 +174,53 @@ function AchievementsPage() {
           <div className="glass-card ach-modal" onClick={(e) => e.stopPropagation()}>
             {(() => {
               const meta = getMeta(selected.type, selected.tier)
-              const color: 'bronze' | 'gold' | 'diamond' =
-                selected.tier === 1 ? 'bronze' : selected.tier === 2 ? 'gold' : 'diamond'
+              const color: 'bronze' | 'silver' | 'gold' =
+                selected.tier === 1 ? 'bronze' : selected.tier === 2 ? 'silver' : 'gold'
               const achieved = !!items.find(
                 (it) => it.type === selected.type && it.tier === selected.tier
               )
+              const label =
+                selected.type === 'total_days'
+                  ? selected.tier === 1
+                    ? '7'
+                    : selected.tier === 2
+                      ? '14'
+                      : '21'
+                  : selected.type === 'friends_count'
+                    ? selected.tier === 1
+                      ? '3'
+                      : selected.tier === 2
+                        ? '7'
+                        : '10'
+                    : selected.type === 'streak'
+                      ? selected.tier === 1
+                        ? '5'
+                        : selected.tier === 2
+                          ? '15'
+                          : '30'
+                      : selected.type === 'habit_invites'
+                        ? selected.tier === 1
+                          ? '1'
+                          : selected.tier === 2
+                            ? '3'
+                            : '5'
+                        : ''
+              const src = label ? getMedalSrc(color, label) : undefined
               return (
                 <>
                   <h2 className="ach-modal-title">{meta.title}</h2>
                   <div className="ach-modal-medal-wrap">
-                    <div
-                      className={`ach-medal ach-medal--${color} ${
-                        achieved ? 'achieved' : 'locked'
-                      } ach-medal-large`}
-                    >
-                      <span className="ach-medal-num">
-                        {selected.type === 'total_days'
-                          ? selected.tier === 1
-                            ? '7'
-                            : selected.tier === 2
-                              ? '14'
-                              : '21'
-                          : selected.type === 'friends_count'
-                            ? selected.tier === 1
-                              ? '3'
-                              : selected.tier === 2
-                                ? '7'
-                                : '10'
-                            : selected.type === 'streak'
-                              ? selected.tier === 1
-                                ? '5'
-                                : selected.tier === 2
-                                  ? '15'
-                                  : '30'
-                              : selected.type === 'habit_invites'
-                                ? selected.tier === 1
-                                  ? '1'
-                                  : selected.tier === 2
-                                    ? '3'
-                                    : '5'
-                                : ''}
-                      </span>
-                    </div>
+                    {src ? (
+                      <img
+                        className={`ach-medal-img ach-medal-large ${achieved ? 'achieved' : 'locked'}`}
+                        src={src}
+                        alt={`${color} ${label}`}
+                      />
+                    ) : (
+                      <div className={`ach-medal ${achieved ? 'achieved' : 'locked'} ach-medal-large`}>
+                        <span className="ach-medal-num">{label}</span>
+                      </div>
+                    )}
                   </div>
                   <p className="ach-modal-description">{meta.description}</p>
                   <p className="ach-modal-date">

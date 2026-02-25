@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { habitsApi } from '../services/api'
-import type { Habit } from '../types'
+import { habitsApi, profileApi } from '../services/api'
+import type { Habit, User } from '../types'
 import HabitCard from '../components/HabitCard'
 import './HomePage.css'
 
@@ -22,11 +22,13 @@ function formatDateLabel(date: Date) {
 function HomePage() {
   const [habits, setHabits] = useState<Habit[]>([])
   const [loading, setLoading] = useState(true)
+  const [me, setMe] = useState<User | null>(null)
   const navigate = useNavigate()
 
   const refreshHabits = async () => {
     try {
-      const data = await habitsApi.getAll()
+      const [profile, data] = await Promise.all([profileApi.get(), habitsApi.getAll()])
+      setMe(profile)
       setHabits(data)
     } catch (error) {
       console.error('Failed to refresh habits:', error)
@@ -36,7 +38,8 @@ function HomePage() {
   useEffect(() => {
     const loadHabits = async () => {
       try {
-        const data = await habitsApi.getAll()
+        const [profile, data] = await Promise.all([profileApi.get(), habitsApi.getAll()])
+        setMe(profile)
         setHabits(data)
       } catch (error) {
         console.error('Failed to load habits:', error)
@@ -100,6 +103,7 @@ function HomePage() {
               <HabitCard
                 key={habit.id}
                 habit={habit}
+                myUserId={me?.id}
                 onQuickToggle={(updated) =>
                   setHabits((prev) => {
                     if (!updated) {
