@@ -6,6 +6,7 @@ import { formatDateKey, getDayLabels } from '../utils/week'
 import type { FirstDayOfWeek } from '../utils/week'
 import HabitForm, { type HabitFormData } from '../components/HabitForm'
 import ParticipantSettingsForm, { type ParticipantSettingsFormData } from '../components/ParticipantSettingsForm'
+import QRCode from 'qrcode'
 import './HabitDetailPage.css'
 
 function SettingsIcon() {
@@ -46,6 +47,10 @@ function HabitDetailPage() {
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteFriends, setInviteFriends] = useState<Array<{ id: string; name: string; avatar: string }>>([])
   const [inviteSelected, setInviteSelected] = useState<string[]>([])
+  const [inviteLinkModalOpen, setInviteLinkModalOpen] = useState(false)
+  const [inviteLinkUrl, setInviteLinkUrl] = useState<string | null>(null)
+  const [inviteLinkQr, setInviteLinkQr] = useState<string | null>(null)
+  const [inviteLinkLoading, setInviteLinkLoading] = useState(false)
   const [profilePopup, setProfilePopup] = useState<{ userId: string; name: string; avatar: string; bio?: string } | null>(null)
   const [me, setMe] = useState<User | null>(null)
 
@@ -418,6 +423,28 @@ function HabitDetailPage() {
       alert(e?.response?.data?.detail || 'Не удалось отправить приглашения')
     } finally {
       setInviteLoading(false)
+    }
+  }
+
+  const openInviteLinkModal = async () => {
+    setInviteLinkModalOpen(true)
+    setInviteLinkUrl(null)
+    setInviteLinkQr(null)
+    setInviteLinkLoading(true)
+    try {
+      const inv = await friendsApi.getInvite()
+      setInviteLinkUrl(inv.referral_url)
+      const dataUrl = await QRCode.toDataURL(inv.referral_url, {
+        width: 240,
+        margin: 1,
+        color: { dark: '#9c968a', light: '#00000000' },
+      })
+      setInviteLinkQr(dataUrl)
+    } catch {
+      alert('Не удалось получить ссылку для приглашения')
+      setInviteLinkModalOpen(false)
+    } finally {
+      setInviteLinkLoading(false)
     }
   }
 
@@ -809,10 +836,49 @@ function HabitDetailPage() {
                 )
               })}
             </div>
-            <button className="btn btn-success" onClick={handleInviteSubmit} disabled={inviteLoading || inviteSelected.length === 0}>
-              Пригласить
+            {inviteFriends.length > 0 && (
+              <button className="btn btn-success" onClick={handleInviteSubmit} disabled={inviteLoading || inviteSelected.length === 0}>
+                Пригласить
+              </button>
+            )}
+            <button className="btn btn-secondary" onClick={openInviteLinkModal} disabled={inviteLoading}>
+              Пригласить нового друга
             </button>
             <button className="btn btn-secondary habit-cell-popup-close" onClick={() => setInviteModalOpen(false)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
+      )}
+
+      {inviteLinkModalOpen && (
+        <div className="habit-cell-popup-overlay" onClick={() => setInviteLinkModalOpen(false)}>
+          <div className="glass-card habit-cell-popup" onClick={(e) => e.stopPropagation()}>
+            <h3 className="habit-cell-popup-title">Приглашение по ссылке</h3>
+            {inviteLinkLoading ? (
+              <div style={{ color: 'var(--text-muted)', marginBottom: 12 }}>Загрузка…</div>
+            ) : (
+              <>
+                {inviteLinkUrl && (
+                  <a
+                    href={inviteLinkUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ wordBreak: 'break-all', color: 'var(--accent)', display: 'inline-block', marginBottom: 8 }}
+                  >
+                    {inviteLinkUrl}
+                  </a>
+                )}
+                {inviteLinkQr && (
+                  <img
+                    src={inviteLinkQr}
+                    alt="QR приглашения"
+                    style={{ width: 220, height: 220, borderRadius: 12, alignSelf: 'center', marginBottom: 12 }}
+                  />
+                )}
+              </>
+            )}
+            <button className="btn btn-secondary habit-cell-popup-close" onClick={() => setInviteLinkModalOpen(false)}>
               Закрыть
             </button>
           </div>
