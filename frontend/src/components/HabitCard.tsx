@@ -41,6 +41,12 @@ interface HabitCardProps {
 function HabitCard({ habit, onQuickToggle, onRefreshHabits, myUserId }: HabitCardProps) {
   const navigate = useNavigate()
   const isInvitation = habit.is_invited === true
+  const participantsLabel = (n: number) => {
+    const mod10 = n % 10
+    const mod100 = n % 100
+    if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return `${n} участника`
+    return `${n} участников`
+  }
   const myParticipantColor = habit.participants?.find(
     (p) => p.id === myUserId && p.status === 'accepted'
   )?.color as HabitColor | undefined
@@ -219,9 +225,12 @@ function HabitCard({ habit, onQuickToggle, onRefreshHabits, myUserId }: HabitCar
             {habit.has_pending_invites && (
               <span className="participants-count">Друг приглашен</span>
             )}
-            {habit.participants && habit.participants.length > 1 && !habit.has_pending_invites && (
-              <span className="participants-count">{habit.participants.length} участников</span>
-            )}
+            {(() => {
+              const acceptedCount = (habit.participants || []).filter((p) => p.status === 'accepted').length
+              return !habit.has_pending_invites && acceptedCount > 1 ? (
+                <span className="participants-count">{participantsLabel(acceptedCount)}</span>
+              ) : null
+            })()}
           </div>
           {!isInvitation && (
             <div className="habit-streak" title="Серия дней подряд">

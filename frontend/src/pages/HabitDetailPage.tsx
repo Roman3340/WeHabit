@@ -180,6 +180,12 @@ function HabitDetailPage() {
     setSaving(true)
     try {
       await habitsApi.update(id, formData)
+      const toInvite = (formData.participant_ids || []).filter((uid) => {
+        return !(habit?.participants || []).some((p) => p.id === uid)
+      })
+      if (formData.is_shared && toInvite.length > 0) {
+        await habitsApi.invite(id, toInvite)
+      }
       await loadHabit()
       await loadStats()
       setEditing(false)
