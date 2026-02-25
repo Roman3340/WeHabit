@@ -428,6 +428,7 @@ function HabitDetailPage() {
   }
 
   const openInviteLinkModal = async () => {
+    setInviteModalOpen(false)
     setInviteLinkModalOpen(true)
     setInviteLinkUrl(null)
     setInviteLinkQr(null)
