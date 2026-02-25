@@ -8,6 +8,7 @@ import HabitForm, { type HabitFormData } from '../components/HabitForm'
 import ParticipantSettingsForm, { type ParticipantSettingsFormData } from '../components/ParticipantSettingsForm'
 import QRCode from 'qrcode'
 import './HabitDetailPage.css'
+import './FeedPage.css'
 
 function SettingsIcon() {
   return (
@@ -435,9 +436,9 @@ function HabitDetailPage() {
       const inv = await friendsApi.getInvite()
       setInviteLinkUrl(inv.referral_url)
       const dataUrl = await QRCode.toDataURL(inv.referral_url, {
-        width: 240,
+        width: 220,
         margin: 1,
-        color: { dark: '#9c968a', light: '#00000000' },
+        color: { dark: '#111827', light: '#F9FAFB' },
       })
       setInviteLinkQr(dataUrl)
     } catch {
@@ -852,33 +853,38 @@ function HabitDetailPage() {
       )}
 
       {inviteLinkModalOpen && (
-        <div className="habit-cell-popup-overlay" onClick={() => setInviteLinkModalOpen(false)}>
-          <div className="glass-card habit-cell-popup" onClick={(e) => e.stopPropagation()}>
-            <h3 className="habit-cell-popup-title">Приглашение по ссылке</h3>
-            {inviteLinkLoading ? (
-              <div style={{ color: 'var(--text-muted)', marginBottom: 12 }}>Загрузка…</div>
-            ) : (
-              <>
-                {inviteLinkUrl && (
-                  <a
-                    href={inviteLinkUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ wordBreak: 'break-all', color: 'var(--accent)', display: 'inline-block', marginBottom: 8 }}
-                  >
-                    {inviteLinkUrl}
-                  </a>
-                )}
-                {inviteLinkQr && (
-                  <img
-                    src={inviteLinkQr}
-                    alt="QR приглашения"
-                    style={{ width: 220, height: 220, borderRadius: 12, alignSelf: 'center', marginBottom: 12 }}
-                  />
-                )}
-              </>
-            )}
-            <button className="btn btn-secondary habit-cell-popup-close" onClick={() => setInviteLinkModalOpen(false)}>
+        <div className="feed-popup-overlay" onClick={() => setInviteLinkModalOpen(false)}>
+          <div className="glass-card feed-popup" onClick={(e) => e.stopPropagation()}>
+            <h3 className="feed-popup-title">Пригласить друга</h3>
+            <p className="feed-popup-desc">Отправьте ссылку или QR — друг сможет принять приглашение.</p>
+            <div className="feed-popup-link-wrap">
+              <input readOnly value={inviteLinkUrl || '…'} className="input feed-popup-input" />
+              <button
+                type="button"
+                className="btn feed-popup-copy"
+                disabled={!inviteLinkUrl}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard?.writeText(inviteLinkUrl || '')
+                    alert('Ссылка скопирована')
+                  } catch {
+                    alert('Не удалось скопировать. Скопируйте ссылку вручную.')
+                  }
+                }}
+              >
+                Копировать
+              </button>
+            </div>
+            <div className="feed-popup-qr">
+              {inviteLinkLoading ? (
+                <div className="feed-popup-qr-loading">Генерирую QR…</div>
+              ) : inviteLinkQr ? (
+                <img className="feed-popup-qr-img" src={inviteLinkQr} alt="QR-код приглашения" />
+              ) : (
+                <div className="feed-popup-qr-loading">QR недоступен</div>
+              )}
+            </div>
+            <button type="button" className="btn btn-secondary" onClick={() => setInviteLinkModalOpen(false)}>
               Закрыть
             </button>
           </div>
