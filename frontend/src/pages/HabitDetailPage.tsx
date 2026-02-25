@@ -80,7 +80,18 @@ function HabitDetailPage() {
     if (!id) return
     try {
       const data = await habitsApi.getById(id)
-      setHabit(data)
+      // Если есть принятые участники, но режим совместной привычки выключен — включаем его
+      const acceptedCount = (data.participants || []).filter((p) => p.status === 'accepted').length
+      if (!data.is_shared && acceptedCount > 1) {
+        try {
+          const updated = await habitsApi.update(id, { is_shared: true })
+          setHabit(updated)
+        } catch {
+          setHabit(data)
+        }
+      } else {
+        setHabit(data)
+      }
     } catch (error) {
       console.error('Failed to load habit:', error)
     } finally {
@@ -523,7 +534,9 @@ function HabitDetailPage() {
                   name: habit.name,
                   description: habit.description,
                   frequency: habit.frequency,
-                  is_shared: habit.is_shared,
+                  is_shared:
+                    habit.is_shared ||
+                    ((habit.participants || []).filter((p) => p.status === 'accepted').length > 1),
                   color: habit.color || 'gold',
                   days_of_week: habit.days_of_week,
                   weekly_goal_days: habit.weekly_goal_days,
@@ -608,7 +621,7 @@ function HabitDetailPage() {
             <p className="habit-detail-description">{habit.description}</p>
           )}
 
-          {habit.is_shared && (
+          {(habit.is_shared || ((habit.participants || []).filter((p) => p.status !== 'pending').length > 1)) && (
             <div className="habit-detail-info" style={{ marginTop: '-8px' }}>
               <div className="info-item" style={{ alignItems: 'center' }}>
                 <span className="info-label">Участвуют:</span>
