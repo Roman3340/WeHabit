@@ -105,14 +105,15 @@ function FeedPage() {
         return `${name} удалил(а) вас из своей привычки ${habitName}`
       case 'achievement': {
         const a = ev.achievement
-        let achName = 'новое достижение'
+        let achName = '«новое достижение»'
+        const tierEmoji = a?.tier === 1 ? '🥉' : a?.tier === 2 ? '🥈' : a?.tier === 3 ? '🥇' : ''
         if (a) {
           if (a.type === 'total_days') achName = '«Выполняй привычку регулярно»'
           if (a.type === 'friends_count') achName = '«Приглашай друзей»'
           if (a.type === 'streak') achName = '«Держи серию в привычке»'
           if (a.type === 'habit_invites') achName = '«Веди привычки с друзьями»'
         }
-        return `${name} получил(а) достижение ${achName}`
+        return `${name} получил(а) достижение ${achName} ${tierEmoji}`
       }
       default:
         return `${name}: событие ${ev.event_type} ${habitName}`

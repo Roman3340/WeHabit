@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { habitsApi, statsApi, friendsApi, profileApi } from '../services/api'
+import { habitsApi, statsApi, friendsApi, profileApi, achievementsApi } from '../services/api'
 import type { Habit, HabitStats, HabitColor, User } from '../types'
 import { formatDateKey, getDayLabels } from '../utils/week'
 import type { FirstDayOfWeek } from '../utils/week'
@@ -52,7 +52,9 @@ function HabitDetailPage() {
   const [inviteLinkUrl, setInviteLinkUrl] = useState<string | null>(null)
   const [inviteLinkQr, setInviteLinkQr] = useState<string | null>(null)
   const [inviteLinkLoading, setInviteLinkLoading] = useState(false)
-  const [profilePopup, setProfilePopup] = useState<{ userId: string; name: string; avatar: string; bio?: string } | null>(null)
+  const [profilePopup, setProfilePopup] = useState<{ userId: string; name: string; avatar: string; bio?: string; achievements?: Array<{ type: string; tier: number }> } | null>(null)
+  const medalImages = import.meta.glob('../achievement/*.png', { as: 'url', eager: true }) as Record<string, string>
+  const getMedalSrc = (color: 'bronze' | 'silver' | 'gold', label: string) => medalImages[`../achievement/${color}_${label}.png`]
   const [me, setMe] = useState<User | null>(null)
 
   useEffect(() => {
@@ -641,7 +643,16 @@ function HabitDetailPage() {
                         type="button"
                         className="avatar-btn"
                         title={name}
-                        onClick={() => u && setProfilePopup({ userId: u.id, name, avatar: u.avatar_emoji, bio: u.bio })}
+                        onClick={async () => {
+                          if (!u) return
+                          setProfilePopup({ userId: u.id, name, avatar: u.avatar_emoji, bio: u.bio })
+                          try {
+                            const ach = await achievementsApi.getUser(u.id)
+                            setProfilePopup({ userId: u.id, name, avatar: u.avatar_emoji, bio: u.bio, achievements: ach.map((a) => ({ type: a.type, tier: a.tier })) })
+                          } catch {
+                            // ignore
+                          }
+                        }}
                         style={{
                           width: 28, height: 28, borderRadius: 999, display: 'inline-flex',
                           alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)'
@@ -922,6 +933,43 @@ function HabitDetailPage() {
               <div style={{ fontSize: 28 }}>{profilePopup.avatar}</div>
               {profilePopup.bio && <div style={{ color: 'var(--text-muted)' }}>{profilePopup.bio}</div>}
             </div>
+            {profilePopup.achievements && profilePopup.achievements.length > 0 && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+                {profilePopup.achievements.map((a, idx) => {
+                  const color: 'bronze' | 'silver' | 'gold' = a.tier === 1 ? 'bronze' : a.tier === 2 ? 'silver' : 'gold'
+                  const label =
+                    a.type === 'total_days'
+                      ? a.tier === 1
+                        ? '7'
+                        : a.tier === 2
+                          ? '14'
+                          : '21'
+                      : a.type === 'friends_count'
+                        ? a.tier === 1
+                          ? '3'
+                          : a.tier === 2
+                            ? '7'
+                            : '10'
+                        : a.type === 'streak'
+                          ? a.tier === 1
+                            ? '5'
+                            : a.tier === 2
+                              ? '15'
+                              : '30'
+                          : a.type === 'habit_invites'
+                            ? a.tier === 1
+                              ? '1'
+                              : a.tier === 2
+                                ? '3'
+                                : '5'
+                            : ''
+                  const src = label ? getMedalSrc(color, label) : undefined
+                  return src ? (
+                    <img key={idx} src={src} alt={`${color} ${label}`} style={{ height: 40, objectFit: 'contain' }} />
+                  ) : null
+                })}
+              </div>
+            )}
             {habit.can_edit && profilePopup.userId !== habit.created_by && (
               <button className="btn btn-secondary" onClick={() => handleRemoveParticipant(profilePopup.userId)}>
                 Удалить из привычки

@@ -67,6 +67,13 @@
   gap: 4px;
 }
 
+.yearly-week-row {
+  margin-bottom: 4px;
+}
+.yearly-week-row:last-child {
+  margin-bottom: 0;
+}
+
 .yearly-weekday-row {
   margin-bottom: 4px;
 }

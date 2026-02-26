@@ -20,18 +20,28 @@ from app.core.config import settings
 # New function to get achievement details
 def get_achievement_details(achievement_type: str, tier: int) -> dict:
     """Returns the name and emoji for an achievement."""
-    # This is a placeholder. In a real application, this would come from a config file or database.
+    # Unified mapping aligned with frontend and product copy
     achievements = {
+        "total_days": {
+            1: {"name": "Выполняй привычку регулярно", "emoji": "🥉"},
+            2: {"name": "Выполняй привычку регулярно", "emoji": "🥈"},
+            3: {"name": "Выполняй привычку регулярно", "emoji": "🥇"},
+        },
+        "friends_count": {
+            1: {"name": "Приглашай друзей", "emoji": "🥉"},
+            2: {"name": "Приглашай друзей", "emoji": "🥈"},
+            3: {"name": "Приглашай друзей", "emoji": "🥇"},
+        },
         "streak": {
-            1: {"name": "Начало положено", "emoji": "🔥"},
-            2: {"name": "Уже привычка", "emoji": "🔥🔥"},
-            3: {"name": "Мастер постоянства", "emoji": "🔥🔥🔥"},
+            1: {"name": "Держи серию в привычке", "emoji": "🥉"},
+            2: {"name": "Держи серию в привычке", "emoji": "🥈"},
+            3: {"name": "Держи серию в привычке", "emoji": "🥇"},
         },
         "habit_invites": {
-            1: {"name": "Душа компании", "emoji": "🎉"},
-            2: {"name": "Массовик-затейник", "emoji": "🥳"},
-            3: {"name": "Лидер мнений", "emoji": "👑"},
-        }
+            1: {"name": "Веди привычки с друзьями", "emoji": "🥉"},
+            2: {"name": "Веди привычки с друзьями", "emoji": "🥈"},
+            3: {"name": "Веди привычки с друзьями", "emoji": "🥇"},
+        },
     }
     return achievements.get(achievement_type, {}).get(tier, {"name": "Новое достижение", "emoji": "🏆"})
 
@@ -248,7 +258,7 @@ async def check_feed_notifications(bot: Bot):
 
                 if user_achievement:
                     details = get_achievement_details(user_achievement.type, user_achievement.tier)
-                    tier_emoji = {1: "🥉", 2: "🏅", 3: "💎"}.get(user_achievement.tier, "")
+                    tier_emoji = {1: "🥉", 2: "🥈", 3: "🥇"}.get(user_achievement.tier, "")
                     message = f"🏆 {actor_name} получил(а) новое достижение: <b>{details['name']}</b> {tier_emoji}"
 
             if message:
